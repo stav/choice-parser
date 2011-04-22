@@ -14,10 +14,16 @@ class ChoiceTest:
         }
     def run(self):
         print "Test results:\n"
+
         for name, case in self.cases.iteritems():
-            # Output buffer
+            print '============================='
+            print name, '\n'
             r = genesis.Router()
-            output = r.start(options=None, str=case.get('input'), ret=True)
+            if case.get('file'):
+                options = {'inputfile': case.get('file')}
+            else:
+                options = None
+            output = r.start(options=options, str=case.get('input'), ret=True)
             print output
             del r
 

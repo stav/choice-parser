@@ -38,13 +38,19 @@ class Parser:
         """Renders.
         Called by [[Router]].
         """
-
+        if len(self.tokens) == 0: return
+        
+        options_cnt = len(self.tokens) - 1
         output = "stem: %s\n" % self.tokens[0]
 
         for o in self.tokens[1:]:
             output += "option: %s\n" % o
 
-        output += 'stats: stem is %d bytes long, %d options found\n' % (len(self.tokens[0]), len(self.tokens) - 1)
+        output += 'stats: stem is %d bytes long, %d option%s found\n' % (
+            len(self.tokens[0]), 
+            options_cnt, 
+            's' if options_cnt != 1 else ''
+            )
 
         return output
 
@@ -106,27 +112,31 @@ class Router:
     # ---------------------------------------------------------------------------
 
     def __init__(self):
-        f = open('input', 'rb')
-        self.input = [x.strip() for x in f if x.strip()]
-        f.close()
+        pass
 
     # Methods
     # ---------------------------------------------------------------------------
 
     def start(self, options=None, str=None, ret=None):
+        print 'options: ', options
+        print 'str: %s' % str
+
         if (options):
             self.options = Options(router=self, options=options, argv=None)
         else:
             self.options = Options(router=self, argv=sys.argv[1:], options=None)
 
-        if (self.options.has('help')):
-            return self.help()
+        if (self.options.has('help')):    return self.help()
+        if (self.options.has('version')): return self.version()
 
-        elif (self.options.has('version')):
-            return self.version()
-
-        else:
-            return self.parse(str=str, ret=ret)
+        if str is None:
+            if (self.options.has('inputfile')):
+                f = open(self.options.get('inputfile'), 'rb')
+                #self.input = [x.strip() for x in f if x.strip()]
+                str = f.read()
+                f.close()
+                
+        return self.parse(str=str, ret=ret)
 
     def help(self):
         print "Usage: %s [OPTIONS]" % sys.argv[0]
@@ -152,10 +162,8 @@ class Router:
             if str is not None:
                 lines = str
 
-            elif self.input:
-                lines = "\n".join(self.input)
-
             else:
+                print 'Enter input text (ctrl-D to end)'
                 lines = [sys.stdin.read()]
                 lines = " ".join(lines)
 
@@ -170,10 +178,10 @@ class Router:
             self.parser.load_string(lines)
             output = self.parser.render()
             if ret: return output
-            sys.stdout.write(output)
+            if output: sys.stdout.write(output)
 
-        except:
-            sys.stderr.write("Parse error. Check your input.\n")
+        except ParsingError:
+            sys.stderr.write("Parse error. Check your input.")
             print sys.exc_info()[0]
             print sys.exc_info()[1]
 
@@ -250,11 +258,12 @@ class Options:
         'indent-spaces': 4
     }
     cmdline_keys = [
-        ('h', 'help', 'Shows help'),
-        ('v', 'version', 'Shows the version'),
-        ('', 'no-guides', 'Deprecated'),
-        ('', 'indent-spaces=', 'Indent spaces'),
-        ('', 'no-last-newline', 'Skip the trailing newline'),
+        ('h', 'help'            , 'Shows help'                  ),
+        ('v', 'version'         , 'Shows the version'           ),
+        ('i', 'inputfile'       , 'File to use for input'       ),
+        ('' , 'no-guides'       , 'Deprecated'                  ),
+        ('' , 'indent-spaces='  , 'Indent spaces'               ),
+        ('' , 'no-last-newline' , 'Skip the trailing newline'   ),
     ]
 
     # Property: router
