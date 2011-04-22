@@ -1,0 +1,268 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+version = "0.1.0"
+
+import getopt
+import sys
+import re
+
+# ===============================================================================
+
+class Parser:
+    """The parser.
+    """
+
+    # Constructor
+    # ---------------------------------------------------------------------------
+
+    def __init__(self, options=None, str=''):
+        """Constructor.
+        """
+
+        self.tokens  = []
+        self.str     = str
+        self.options = options
+
+    # Methods
+    # ---------------------------------------------------------------------------
+
+    def load_string(self, str):
+        """Loads a string to parse.
+        """
+
+        self.str = str
+        self._tokenize()
+        self._parse()
+
+    def render(self):
+        """Renders.
+        Called by [[Router]].
+        """
+
+        output = "stem: %s\n" % self.tokens[0]
+
+        for o in self.tokens[1:]:
+            output += "option: %s\n" % o
+
+        output += 'stats: stem is %d bytes long, %d options found\n' % (len(self.tokens[0]), len(self.tokens) - 1)
+
+        return output
+
+    # Protected methods
+    # ---------------------------------------------------------------------------
+
+    def _tokenize(self):
+        """Tokenizes.
+        Initializes [[self.tokens]].
+        """
+
+        str = self.str.strip()
+
+        # Find prefix/suffix
+        #~ while True:
+            #~ match = re.match(r"^(\s*<[^>]+>\s*)", str)
+            #~ if match is None: break
+            #~ if self.prefix is None: self.prefix = ''
+            #~ self.prefix += match.group(0)
+            #~ str = str[len(match.group(0)):]
+#~
+        #~ while True:
+            #~ match = re.findall(r"(\s*<[^>]+>[\s\n\r]*)$", str)
+            #~ if not match: break
+            #~ if self.suffix is None: self.suffix = ''
+            #~ self.suffix = match[0] + self.suffix
+            #~ str = str[:-len(match[0])]
+
+        # Split by the element separators
+        for token in re.split('(.*)', str):
+            if token.strip() != '':
+                self.tokens.append(token)
+
+    def _parse(self):
+        pass
+
+    # Properties
+    # ---------------------------------------------------------------------------
+
+    # Property: str
+    # The string
+    str = ''
+
+    # Property: tokens
+    # The list of tokens
+    tokens = []
+
+    # Property: options
+    # Reference to the [[Options]] instance
+    options = None
+
+# ===============================================================================
+
+class Router:
+    """The router.
+    """
+
+    # Constructor
+    # ---------------------------------------------------------------------------
+
+    def __init__(self):
+        f = open('input', 'rb')
+        self.input = [x.strip() for x in f if x.strip()]
+        f.close()
+
+    # Methods
+    # ---------------------------------------------------------------------------
+
+    def start(self, options=None, str=None, ret=None):
+        if (options):
+            self.options = Options(router=self, options=options, argv=None)
+        else:
+            self.options = Options(router=self, argv=sys.argv[1:], options=None)
+
+        if (self.options.has('help')):
+            return self.help()
+
+        elif (self.options.has('version')):
+            return self.version()
+
+        else:
+            return self.parse(str=str, ret=ret)
+
+    def help(self):
+        print "Usage: %s [OPTIONS]" % sys.argv[0]
+        print "Parses and tokenizes text."
+        print ""
+        for short, long, info in self.options.cmdline_keys:
+            if "Deprecated" in info: continue
+            if not short == '': short = '-%s,' % short
+            if not long  == '': long  = '--%s' % long.replace("=", "=XXX")
+
+            print "%6s %-25s %s" % (short, long, info)
+        print ""
+        print "\n".join(self.help_content)
+
+    def version(self):
+        global version
+        print version
+
+    def parse(self, str=None, ret=None):
+        self.parser = Parser(self.options)
+
+        try:
+            if str is not None:
+                lines = str
+
+            elif self.input:
+                lines = "\n".join(self.input)
+
+            else:
+                lines = [sys.stdin.read()]
+                lines = " ".join(lines)
+
+        except KeyboardInterrupt:
+            pass
+
+        except:
+            sys.stderr.write("Reading failed.\n")
+            return
+
+        try:
+            self.parser.load_string(lines)
+            output = self.parser.render()
+            if ret: return output
+            sys.stdout.write(output)
+
+        except:
+            sys.stderr.write("Parse error. Check your input.\n")
+            print sys.exc_info()[0]
+            print sys.exc_info()[1]
+
+    def exit(self):
+        sys.exit()
+
+    help_content = [
+        "Please refer to the manual for more information.",
+    ]
+
+# ===============================================================================
+
+class Options:
+    def __init__(self, router, argv, options=None):
+        # Init self
+        self.router = router
+
+        # `options` can be given as a dict of stuff to preload
+        if options:
+            for k, v in options.iteritems():
+                self.options[k] = v
+            return
+
+        # Prepare for getopt()
+        short_keys, long_keys = "", []
+        for short, long, info in self.cmdline_keys: # 'v', 'version'
+            short_keys += short
+            long_keys.append(long)
+
+        try:
+            getoptions, arguments = getopt.getopt(argv, short_keys, long_keys)
+
+        except getopt.GetoptError:
+            err = sys.exc_info()[1]
+            sys.stderr.write("Options error: %s\n" % err)
+            sys.stderr.write("Try --help for a list of arguments.\n")
+            return router.exit()
+
+        # Sort them out into options
+        options = {}
+        i = 0
+        for option in getoptions:
+            key, value = option # '--version', ''
+            if (value == ''): value = True
+
+            # If the key is long, write it
+            if key[0:2] == '--':
+                clean_key = key[2:]
+                options[clean_key] = value
+
+            # If the key is short, look for the long version of it
+            elif key[0:1] == '-':
+                for short, long, info in self.cmdline_keys:
+                    if short == key[1:]:
+                        print long
+                        options[long] = True
+
+        # Done
+        for k, v in options.iteritems():
+            self.options[k] = v
+
+    def __getattr__(self, attr):
+        return self.get(attr)
+
+    def get(self, attr):
+        try:    return self.options[attr]
+        except: return None
+
+    def has(self, attr):
+        try:    return self.options.has_key(attr)
+        except: return False
+
+    options = {
+        'indent-spaces': 4
+    }
+    cmdline_keys = [
+        ('h', 'help', 'Shows help'),
+        ('v', 'version', 'Shows the version'),
+        ('', 'no-guides', 'Deprecated'),
+        ('', 'indent-spaces=', 'Indent spaces'),
+        ('', 'no-last-newline', 'Skip the trailing newline'),
+    ]
+
+    # Property: router
+    # Router
+    router = 1
+
+# ===============================================================================
+
+if __name__ == "__main__":
+    z = Router()
+    z.start()
