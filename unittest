@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import genesis
+
+class ChoiceTest:
+    cases = {
+        'File input test': {
+            'file': 'input',
+            },
+        'String input test': {
+            'input': 'This is the stem\n\nThis is an option',
+            },
+        }
+    def run(self):
+        print "Test results:\n"
+        for name, case in self.cases.iteritems():
+            # Output buffer
+            r = genesis.Router()
+            output = r.start(options=None, str=case.get('input'), ret=True)
+            print output
+            del r
+
+if __name__ == '__main__':
+    s = ChoiceTest()
+    s.run()
