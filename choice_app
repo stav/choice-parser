@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-version = "0.1"
 
 from router import Router
 
 if __name__ == "__main__":
-    r = Router(version)
+    r = Router()
     r.parse_args()
     r.start()
     print r.output

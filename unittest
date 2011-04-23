@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import genesis
+from router import Router
 
 class ChoiceTest:
     cases = {
@@ -18,7 +18,7 @@ class ChoiceTest:
         for name, case in self.cases.iteritems():
             print '============================='
             print name, case, '\n'
-            r = genesis.Router()
+            r = Router()
             if case.get('file'):
                 r.parse_args(('--inputfile', case.get('file')))
             elif case.get('input'):

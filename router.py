@@ -12,6 +12,10 @@ class Router:
     # Properties
     # ------------------------------------------------------------------
 
+    # Property: version
+    # Router version
+    version = "0.1"
+
     # Property: options
     # Command line arguments
     options = None
@@ -23,8 +27,8 @@ class Router:
     # Constructor
     # ------------------------------------------------------------------
 
-    def __init__(self, version):
-        self.version = version
+    def __init__(self):
+        pass
 
     # Methods
     # ------------------------------------------------------------------
@@ -40,7 +44,7 @@ class Router:
             )
 
         parser.add_argument('-v', '--version', action='version',
-                            version='%(prog)s ' + self.version,
+                            version='%(prog)s Router version ' + self.version,
                             help='print the version information and exit')
 
         parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
