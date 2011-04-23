@@ -1,7 +1,9 @@
 
 import re
 
-class Parser:
+from question import Question
+
+class Parser(object):
     """
     The parser looks through the tokens to determine what is the stem and
     what are the options.
@@ -25,7 +27,6 @@ class Parser:
         self.str = str
         self.tokens  = []
         self._tokenize()
-        print 'Parser __init__() tokens: ', self.tokens
 
     # Protected methods
     # ------------------------------------------------------------------
@@ -57,6 +58,18 @@ class Parser:
             if token.strip() != '':
                 self.tokens.append(token)
 
+class SingleParser (Parser):
+    """
+    The single parser assumes only one question and takes the first line
+    to be the stem and the rest are options.
+    """
+
+    # Constructor
+    # ------------------------------------------------------------------
+
+    def __init__(self, str):
+        super(SingleParser, self).__init__(str)
+
     # Public methods
     # ------------------------------------------------------------------
 
@@ -64,18 +77,54 @@ class Parser:
         """Parses.
         Called by [[Router]].
         """
-        if len(self.tokens) == 0: return
+        if len(self.tokens) == 0: return []
 
-        options_cnt = len(self.tokens) - 1
-        output = "stem: %s\n" % self.tokens[0]
+        question = Question()
+        question.stem = self.tokens[0]
+        question.options = self.tokens[1:] if len(self.tokens) > 1 else []
 
-        for o in self.tokens[1:]:
-            output += "option: %s\n" % o
+        return [question]
 
-        output += 'stats: stem is %d bytes long, %d option%s found\n' % (
-            len(self.tokens[0]),
-            options_cnt,
-            's' if options_cnt != 1 else ''
-            )
+class IndexParser (Parser):
+    """
+    The index parser determines stems to be prefixed with numbers and the
+    options to be prefixed with letters.
+    """
 
-        return output
+    # Constructor
+    # ------------------------------------------------------------------
+
+    def __init__(self, str):
+        super(IndexParser, self).__init__(str)
+
+    # Public methods
+    # ------------------------------------------------------------------
+
+    def parse(self):
+        """Parses.
+        Called by [[Router]].
+        """
+        if len(self.tokens) == 0: return []
+        
+        questions = []
+        question = None
+
+        for token in self.tokens:
+            print 'token: ', token
+            s = re.match(r"\s*\d+\. ", token)
+            if s and s.group():
+                if question: questions.append(question)
+                question = Question()
+                question.stem = token.strip()
+                
+            else:
+                try:
+                    assert question is not None
+                    question.options = self.tokens[1:] if len(self.tokens) > 1 else []
+
+                except AssertionError:
+                    pass
+
+        if question: questions.append(question)
+
+        return questions

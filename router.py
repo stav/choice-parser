@@ -2,7 +2,8 @@
 import sys
 import argparse
 
-from parser import Parser 
+#from parser import SingleParser as Parser
+from parser import IndexParser as Parser
 
 class Router:
     """
@@ -20,6 +21,10 @@ class Router:
     # Command line arguments
     options = None
 
+    # Property: questions
+    # The list of questions
+    questions = ''
+
     # Property: output
     # The rendered output
     output = ''
@@ -34,7 +39,6 @@ class Router:
     # ------------------------------------------------------------------
 
     def parse_args(self, options=sys.argv[1:]):
-        print 'parge_args(): options: ', options
         global version
 
         parser = argparse.ArgumentParser(
@@ -55,7 +59,6 @@ class Router:
 
         args = parser.parse_args(options)
 
-        print 'parge_args(): ', repr(args)
         self.options = args
 
     def start(self):
@@ -65,7 +68,6 @@ class Router:
         print 'start(): self.options: ', repr(self.options)
 
         if (self.options.inputfile):
-            print 'adding file'
             try:
                 f = open(self.options.inputfile, 'rb')
                 #self.input = [x.strip() for x in f if x.strip()]
@@ -77,14 +79,11 @@ class Router:
                 self.exit()
 
         if (self.options.input):
-            print 'adding input'
             inputstr = self.options.input
 
         self.render(('\n'.join((filestr, inputstr))).strip())
 
     def render(self, str=None):
-        print 'parse() str: %s "%s"' % (type(str), str)
-
         try:
             if str:
                 lines = str
@@ -103,16 +102,23 @@ class Router:
             print sys.exc_info()[1]
             return
 
-        try:
-            self.parser = Parser(lines)
-            #self.parser.load_string(lines)
-            self.output = self.parser.parse()
+        self.parser = Parser(lines)
+        #self.parser.load_string(lines)
+        self.questions = self.parser.parse()
 
-        # todo: add actual exception handler
-        except:
-            sys.stderr.write("Parse error. Check your input.")
-            print sys.exc_info()[0]
-            print sys.exc_info()[1]
+        print 'render() questions:'
+        for q in self.questions:
+            print 'stem: ', repr(q.stem)
+            print 'options: ', repr(q.options)
+
+        print 'stats: %d questions found.' % len(self.questions)
+
+        for question in self.questions:
+            print 'stats: stem is %d bytes long, %d option%s found.' % (
+                len(question.stem),
+                len(question.options),
+                's' if len(question.options) != 1 else ''
+                )
 
     def exit(self):
         sys.exit()
