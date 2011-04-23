@@ -23,8 +23,8 @@ class ChoiceTest:
                 r.parse_args(('--inputfile', case.get('file')))
             elif case.get('input'):
                 r.parse_args((case.get('input'),))
-            output = r.start(ret=True)
-            print output
+            r.start()
+            print r.output
             del r
 
 if __name__ == '__main__':
