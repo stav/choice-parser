@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 version = "0.1.0"
 
+import argparse
 import getopt
 import sys
 import re
@@ -39,7 +40,7 @@ class Parser:
         Called by [[Router]].
         """
         if len(self.tokens) == 0: return
-        
+
         options_cnt = len(self.tokens) - 1
         output = "stem: %s\n" % self.tokens[0]
 
@@ -47,8 +48,8 @@ class Parser:
             output += "option: %s\n" % o
 
         output += 'stats: stem is %d bytes long, %d option%s found\n' % (
-            len(self.tokens[0]), 
-            options_cnt, 
+            len(self.tokens[0]),
+            options_cnt,
             's' if options_cnt != 1 else ''
             )
 
@@ -112,48 +113,57 @@ class Router:
     # ---------------------------------------------------------------------------
 
     def __init__(self):
-        pass
+        self.options = {'input': None, 'inputfile': None}
 
     # Methods
     # ---------------------------------------------------------------------------
 
-    def start(self, options=None, str=None, ret=None):
-        print 'options: ', options
-        print 'str: %s' % str
-
-        if (options):
-            self.options = Options(router=self, options=options, argv=None)
-        else:
-            self.options = Options(router=self, argv=sys.argv[1:], options=None)
-
-        if (self.options.has('help')):    return self.help()
-        if (self.options.has('version')): return self.version()
-
-        if str is None:
-            if (self.options.has('inputfile')):
-                f = open(self.options.get('inputfile'), 'rb')
-                #self.input = [x.strip() for x in f if x.strip()]
-                str = f.read()
-                f.close()
-                
-        return self.parse(str=str, ret=ret)
-
-    def help(self):
-        print "Usage: %s [OPTIONS]" % sys.argv[0]
-        print "Parses and tokenizes text."
-        print ""
-        for short, long, info in self.options.cmdline_keys:
-            if "Deprecated" in info: continue
-            if not short == '': short = '-%s,' % short
-            if not long  == '': long  = '--%s' % long.replace("=", "=XXX")
-
-            print "%6s %-25s %s" % (short, long, info)
-        print ""
-        print "\n".join(self.help_content)
-
-    def version(self):
+    def parse_args(self, options=sys.argv[1:]):
+        print 'parge_args(): options: ', options
         global version
-        print version
+
+        parser = argparse.ArgumentParser(
+            description='Parses and tokenizes text.',
+            epilog='Refer to the documentation for more detailed information.',
+            prog=sys.argv[0],
+            )
+
+        parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + version,
+                            help='print the version information and exit')
+
+        parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
+                            help='input string')
+
+        parser.add_argument('--inputfile', type=str, metavar='FILE',
+                            help='input file')
+
+        args = parser.parse_args(options)
+
+        print 'parge_args(): ', repr(args)
+        self.options = args
+
+    def start(self, ret=None):
+        #~ import pdb; pdb.set_trace()
+        filestr = inputstr = ''
+
+        print 'start(): self.options: ', repr(self.options)
+
+        if (self.options.inputfile):
+            print 'adding file'
+            try:
+                f = open(self.options.inputfile, 'rb')
+                #self.input = [x.strip() for x in f if x.strip()]
+                filestr = f.read()
+                f.close()
+
+            except TypeError:
+                print 'file error'
+
+        if (self.options.input):
+            print 'adding input'
+            inputstr = self.options.input
+
+        return self.parse(str='\n'.join((filestr, inputstr)), ret=ret)
 
     def parse(self, str=None, ret=None):
         self.parser = Parser(self.options)
@@ -188,90 +198,9 @@ class Router:
     def exit(self):
         sys.exit()
 
-    help_content = [
-        "Please refer to the manual for more information.",
-    ]
-
-# ===============================================================================
-
-class Options:
-    def __init__(self, router, argv, options=None):
-        # Init self
-        self.router = router
-
-        # `options` can be given as a dict of stuff to preload
-        if options:
-            for k, v in options.iteritems():
-                self.options[k] = v
-            return
-
-        # Prepare for getopt()
-        short_keys, long_keys = "", []
-        for short, long, info in self.cmdline_keys: # 'v', 'version'
-            short_keys += short
-            long_keys.append(long)
-
-        try:
-            getoptions, arguments = getopt.getopt(argv, short_keys, long_keys)
-
-        except getopt.GetoptError:
-            err = sys.exc_info()[1]
-            sys.stderr.write("Options error: %s\n" % err)
-            sys.stderr.write("Try --help for a list of arguments.\n")
-            return router.exit()
-
-        # Sort them out into options
-        options = {}
-        i = 0
-        for option in getoptions:
-            key, value = option # '--version', ''
-            if (value == ''): value = True
-
-            # If the key is long, write it
-            if key[0:2] == '--':
-                clean_key = key[2:]
-                options[clean_key] = value
-
-            # If the key is short, look for the long version of it
-            elif key[0:1] == '-':
-                for short, long, info in self.cmdline_keys:
-                    if short == key[1:]:
-                        print long
-                        options[long] = True
-
-        # Done
-        for k, v in options.iteritems():
-            self.options[k] = v
-
-    def __getattr__(self, attr):
-        return self.get(attr)
-
-    def get(self, attr):
-        try:    return self.options[attr]
-        except: return None
-
-    def has(self, attr):
-        try:    return self.options.has_key(attr)
-        except: return False
-
-    options = {
-        'indent-spaces': 4
-    }
-    cmdline_keys = [
-        ('h', 'help'            , 'Shows help'                  ),
-        ('v', 'version'         , 'Shows the version'           ),
-        ('i', 'inputfile'       , 'File to use for input'       ),
-        ('' , 'no-guides'       , 'Deprecated'                  ),
-        ('' , 'indent-spaces='  , 'Indent spaces'               ),
-        ('' , 'no-last-newline' , 'Skip the trailing newline'   ),
-    ]
-
-    # Property: router
-    # Router
-    router = 1
-
 # ===============================================================================
 
 if __name__ == "__main__":
     z = Router()
+    z.parse_args()
     z.start()
