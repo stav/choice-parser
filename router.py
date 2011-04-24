@@ -106,11 +106,6 @@ class Router:
         #self.parser.load_string(lines)
         self.questions = self.parser.parse()
 
-        print 'render() questions:'
-        for q in self.questions:
-            print 'stem: ', repr(q.stem)
-            print 'options: ', repr(q.options)
-
         print 'stats: %d questions found.' % len(self.questions)
 
         for question in self.questions:

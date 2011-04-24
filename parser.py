@@ -105,22 +105,24 @@ class IndexParser (Parser):
         Called by [[Router]].
         """
         if len(self.tokens) == 0: return []
-        
+
         questions = []
         question = None
 
         for token in self.tokens:
-            print 'token: ', token
+            #~ print 'token: ', token
             s = re.match(r"\s*\d+\. ", token)
             if s and s.group():
                 if question: questions.append(question)
                 question = Question()
                 question.stem = token.strip()
-                
-            else:
+                continue
+
+            o = re.match(r"\s*[a-zA-Z]+\. ", token)
+            if o and o.group():
                 try:
                     assert question is not None
-                    question.options = self.tokens[1:] if len(self.tokens) > 1 else []
+                    question.options.append(token)
 
                 except AssertionError:
                     pass

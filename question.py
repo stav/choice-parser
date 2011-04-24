@@ -19,4 +19,8 @@ class Question:
     # ------------------------------------------------------------------
 
     def __init__(self):
-        pass
+        self.stem = ''
+        self.options = []
+        
+    def __str__(self):
+        return '%s %d' % (self.stem, len(self.options))
