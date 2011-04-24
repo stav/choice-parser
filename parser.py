@@ -1,8 +1,9 @@
 
 import re
 
-from question import Question
+from router import Question
 
+########################################################################
 class Parser(object):
     """
     The parser looks through the tokens to determine what is the stem and
@@ -67,6 +68,7 @@ class Parser(object):
             if token.strip() != '':
                 self.tokens.append(token)
 
+########################################################################
 class SingleParser (Parser):
     """
     The single parser assumes only one question and takes the first line
@@ -91,6 +93,7 @@ class SingleParser (Parser):
 
         return [question]
 
+########################################################################
 class IndexParser (Parser):
     """
     The index parser determines stems to be prefixed with numbers and the
@@ -133,6 +136,7 @@ class IndexParser (Parser):
 
         return questions
 
+########################################################################
 class BlockParser (Parser):
     """
     The block parser determines stems to be all the text in between the
@@ -174,7 +178,7 @@ class BlockParser (Parser):
 
             try:
                 assert question is not None
-                question.stem += token
+                question.stem += token + '\n'
             except AssertionError:
                 pass
 

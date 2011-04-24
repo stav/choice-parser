@@ -2,6 +2,7 @@
 import sys
 import argparse
 
+########################################################################
 class Router:
     """
     The router collects all the input data and prepares it for parsing.
@@ -30,9 +31,11 @@ class Router:
     # ------------------------------------------------------------------
 
     def __init__(self):
-        pass
+        options = None
+        questions = ''
+        output = ''
 
-    # Methods
+    # Public methods
     # ------------------------------------------------------------------
 
     def parse_args(self, options=sys.argv[1:]):
@@ -48,7 +51,7 @@ class Router:
                             version='%(prog)s Router version ' + self.version,
                             help='print the version information and exit')
 
-        parser.add_argument('-s', '--showstats', action='store_true', 
+        parser.add_argument('-s', '--showstats', action='store_true',
                             help='print out some statistical information')
 
         parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
@@ -69,7 +72,7 @@ class Router:
         if self.options.showstats:
             print 'start(): self.options: ', repr(self.options)
 
-        if (self.options.inputfile):
+        if self.options.inputfile:
             try:
                 f = open(self.options.inputfile, 'rb')
                 #self.input = [x.strip() for x in f if x.strip()]
@@ -78,14 +81,24 @@ class Router:
 
             except IOError:
                 print 'Could not read file.', sys.exc_info()[1]
-                self.exit()
+                self._exit()
 
-        if (self.options.input):
+        if self.options.input:
             inputstr = self.options.input
 
-        self.render(('\n'.join((filestr, inputstr))).strip())
+        self._render(('\n'.join((filestr, inputstr))).strip())
 
-    def render(self, str=None):
+        if self.options.showstats:
+            self._show_stats()
+
+        self._format()
+
+        self._write()
+
+    # Protected methods
+    # ------------------------------------------------------------------
+
+    def _render(self, str=None):
         try:
             if str:
                 lines = str
@@ -105,20 +118,16 @@ class Router:
             return
 
         try:
-            if lines:   
+            if lines:
                 self.parser = self._get_parser(lines)
-                #self.parser.load_string(lines)
                 self.questions = self.parser.parse()
-            
+
         except AttributeError:
             sys.stderr.write("Could not parse input, bad parser selected.")
             print sys.exc_info()[1]
             return
 
-        if self.options.showstats:
-            self.show_stats()
-
-    def show_stats(self):
+    def _show_stats(self):
         #~ import pdb; pdb.set_trace()
         print 'stats: %d questions found.' % len(self.questions)
 
@@ -132,19 +141,61 @@ class Router:
     def _get_parser(self, string):
         parser = self.options.parser if self.options.parser else 'SingleParser'
         #~ Parser = type(parser, (), {})
-        Parser = self.forname("parser", parser)
+        Parser = self.__forname("parser", parser)
         return Parser(string)
 
-    def forname(self, modname, classname):
-        """ 
-        Returns a class of "classname" from module "modname". 
-        reposted by ben snider 
+    def _format(self):
+        pass
+
+    def _write(self):
+        for question in self.questions:
+            print question.stem
+
+            for option in question.options:
+                print option
+
+            print
+
+    def _exit(self):
+        sys.exit()
+
+    # Private methods
+    # ------------------------------------------------------------------
+
+    def __forname(self, modname, classname):
+        """
+        Returns a class of "classname" from module "modname".
+        reposted by ben snider
             from http://mail.python.org/pipermail/python-list/2003-March/192221.html
               on http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
         """
         module = __import__(modname)
         classobj = getattr(module, classname)
         return classobj
-        
-    def exit(self):
-        sys.exit()
+
+########################################################################
+class Question:
+    """
+    A question is composed of a stem and a list of options.
+    """
+
+    # Properties
+    # ------------------------------------------------------------------
+
+    # Property: stem
+    # The so-called question
+    stem = ''
+
+    # Property: options
+    # The list of possible selections
+    options = []
+
+    # Constructor
+    # ------------------------------------------------------------------
+
+    def __init__(self):
+        self.stem = ''
+        self.options = []
+
+    def __str__(self):
+        return '%s %d' % (self.stem, len(self.options))
