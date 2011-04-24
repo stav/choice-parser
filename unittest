@@ -5,24 +5,39 @@ from router import Router
 
 class ChoiceTest:
     cases = {
-        'File input test': {
-            'file': 'input',
-            },
         'String input test': {
             'input': 'This is the stem\n\nThis is an option',
+            },
+        'File input test 1': {
+            'file': 'data/anarchy',
+            'parser': 'IndexParser',
+            },
+        'File input test 2': {
+            'file': 'data/driver',
+            'parser': 'BlockParser',
             },
         }
     def run(self):
         print "Test results:\n"
 
         for name, case in self.cases.iteritems():
-            print '============================='
+            print '====================================================='
             print name, case, '\n'
             r = Router()
-            if case.get('file'):
-                r.parse_args(('--inputfile', case.get('file')))
-            elif case.get('input'):
-                r.parse_args((case.get('input'),))
+            args = []
+
+            if case.get('file' ): 
+                args.append('--inputfile')
+                args.append(case.get('file' ))
+
+            if case.get('parser' ): 
+                args.append('--parser')
+                args.append(case.get('parser' ))
+
+            if case.get('input'): 
+                args.append(case.get('input'))
+
+            r.parse_args(args)
             r.start()
             print r.output
             del r

@@ -14,11 +14,11 @@ class Parser(object):
 
     # Property: str
     # The string
-    str = ''
+    #~ str = ''
 
     # Property: tokens
     # The list of tokens
-    tokens = []
+    #~ tokens = []
 
     # Constructor
     # ------------------------------------------------------------------
@@ -27,6 +27,15 @@ class Parser(object):
         self.str = str
         self.tokens  = []
         self._tokenize()
+
+    def parse(self):
+        """
+        Spins thru the tokens and creates a list of question objects for 
+        each stem found, adds in the options and returns the whole list
+        to the router.
+        """
+        if len(self.tokens) == 0: 
+            return []
 
     # Protected methods
     # ------------------------------------------------------------------
@@ -74,10 +83,7 @@ class SingleParser (Parser):
     # ------------------------------------------------------------------
 
     def parse(self):
-        """Parses.
-        Called by [[Router]].
-        """
-        if len(self.tokens) == 0: return []
+        super(SingleParser, self).parse()
 
         question = Question()
         question.stem = self.tokens[0]
@@ -101,24 +107,20 @@ class IndexParser (Parser):
     # ------------------------------------------------------------------
 
     def parse(self):
-        """Parses.
-        Called by [[Router]].
-        """
-        if len(self.tokens) == 0: return []
-
+        super(IndexParser, self).parse()
         questions = []
         question = None
 
         for token in self.tokens:
             #~ print 'token: ', token
-            s = re.match(r"\s*\d+\. ", token)
+            s = re.match(r"^\s*\d+\. ", token)
             if s and s.group():
                 if question: questions.append(question)
                 question = Question()
                 question.stem = token.strip()
                 continue
 
-            o = re.match(r"\s*[a-zA-Z]+\. ", token)
+            o = re.match(r"^\s*[a-zA-Z]+[.)] ", token)
             if o and o.group():
                 try:
                     assert question is not None
@@ -126,6 +128,55 @@ class IndexParser (Parser):
 
                 except AssertionError:
                     pass
+
+        if question: questions.append(question)
+
+        return questions
+
+class BlockParser (Parser):
+    """
+    The block parser determines stems to be all the text in between the
+    options.
+    """
+
+    # Constructor
+    # ------------------------------------------------------------------
+
+    def __init__(self, str):
+        super(BlockParser, self).__init__(str)
+
+    # Public methods
+    # ------------------------------------------------------------------
+
+    def parse(self):
+        super(BlockParser, self).parse()
+        questions = []
+        question = Question()
+        option = False
+
+        for token in self.tokens:
+            #~ print 'token: ', token
+            o = re.match(r"^\s*[a-zA-Z]+[.)] ", token)
+            if o and o.group():
+                option = True
+                try:
+                    assert question is not None
+                    question.options.append(token)
+                except AssertionError:
+                    pass
+                continue
+
+            if option:
+                questions.append(question)
+                question = Question()
+                question.stem = ''
+                option = False
+
+            try:
+                assert question is not None
+                question.stem += token
+            except AssertionError:
+                pass
 
         if question: questions.append(question)
 

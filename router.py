@@ -2,8 +2,8 @@
 import sys
 import argparse
 
-#from parser import SingleParser as Parser
-from parser import IndexParser as Parser
+from parser import SingleParser
+from parser import IndexParser
 
 class Router:
     """
@@ -57,9 +57,10 @@ class Router:
         parser.add_argument('--inputfile', type=str, metavar='FILE',
                             help='input file')
 
-        args = parser.parse_args(options)
+        parser.add_argument('--parser', type=str, metavar='PRSR',
+                            help='parser class')
 
-        self.options = args
+        self.options = parser.parse_args(options)
 
     def start(self):
         #~ import pdb; pdb.set_trace()
@@ -102,10 +103,17 @@ class Router:
             print sys.exc_info()[1]
             return
 
-        self.parser = Parser(lines)
-        #self.parser.load_string(lines)
-        self.questions = self.parser.parse()
+        try:
+            self.parser = self._get_parser(lines)
+            #self.parser.load_string(lines)
+            self.questions = self.parser.parse()
+            
+        except AttributeError:
+            sys.stderr.write("Could not parse input, bad parser selected.")
+            print sys.exc_info()[1]
+            return
 
+        #~ import pdb; pdb.set_trace()
         print 'stats: %d questions found.' % len(self.questions)
 
         for question in self.questions:
@@ -115,5 +123,24 @@ class Router:
                 's' if len(question.options) != 1 else ''
                 )
 
+    def _get_parser(self, string):
+        if self.options.parser:
+            #~ Parser = type(self.options.parser, (), {})
+            Parser = self.forname("parser", self.options.parser)
+            return Parser(string)
+        
+        return SingleParser(string)
+
+    def forname(self, modname, classname):
+        """ 
+        Returns a class of "classname" from module "modname". 
+        reposted by ben snider 
+            from http://mail.python.org/pipermail/python-list/2003-March/192221.html
+              on http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
+        """
+        module = __import__(modname)
+        classobj = getattr(module, classname)
+        return classobj
+        
     def exit(self):
         sys.exit()
