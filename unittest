@@ -16,8 +16,17 @@ class ChoiceTest:
             'file': 'data/driver',
             'parser': 'BlockParser',
             },
+        'File input test 3': {
+            'file': 'data/reading',
+            'parser': 'IndexParser',
+            },
+        'File input test 4': {
+            'file': 'data/writing',
+            'parser': 'IndexParser',
+            },
         }
-    def run(self):
+
+    def run(self, stats):
         print "Test results:\n"
 
         for name, case in self.cases.iteritems():
@@ -25,6 +34,9 @@ class ChoiceTest:
             print name, case, '\n'
             r = Router()
             args = []
+
+            if stats: 
+                args.append('-s')
 
             if case.get('file' ): 
                 args.append('--inputfile')
@@ -44,4 +56,5 @@ class ChoiceTest:
 
 if __name__ == '__main__':
     s = ChoiceTest()
-    s.run()
+    stats = True
+    s.run(stats)

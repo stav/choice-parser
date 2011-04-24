@@ -1,0 +1,80 @@
+Test results:
+
+=====================================================
+File input test 3 {'parser': 'IndexParser', 'file': 'data/reading'} 
+
+start(): self.options:  Namespace(input=None, inputfile='data/reading', parser='IndexParser', showstats=True)
+stats: 15 questions found.
+stats: stem is 73 bytes long, 4 options found.
+stats: stem is 94 bytes long, 4 options found.
+stats: stem is 90 bytes long, 4 options found.
+stats: stem is 62 bytes long, 4 options found.
+stats: stem is 70 bytes long, 4 options found.
+stats: stem is 119 bytes long, 4 options found.
+stats: stem is 43 bytes long, 4 options found.
+stats: stem is 105 bytes long, 4 options found.
+stats: stem is 90 bytes long, 4 options found.
+stats: stem is 66 bytes long, 4 options found.
+stats: stem is 81 bytes long, 4 options found.
+stats: stem is 66 bytes long, 4 options found.
+stats: stem is 47 bytes long, 4 options found.
+stats: stem is 138 bytes long, 4 options found.
+stats: stem is 65 bytes long, 4 options found.
+
+=====================================================
+File input test 4 {'parser': 'IndexParser', 'file': 'data/writing'} 
+
+start(): self.options:  Namespace(input=None, inputfile='data/writing', parser='IndexParser', showstats=True)
+stats: 10 questions found.
+stats: stem is 102 bytes long, 4 options found.
+stats: stem is 115 bytes long, 4 options found.
+stats: stem is 86 bytes long, 4 options found.
+stats: stem is 115 bytes long, 4 options found.
+stats: stem is 92 bytes long, 4 options found.
+stats: stem is 102 bytes long, 4 options found.
+stats: stem is 103 bytes long, 4 options found.
+stats: stem is 182 bytes long, 4 options found.
+stats: stem is 153 bytes long, 4 options found.
+stats: stem is 93 bytes long, 4 options found.
+
+=====================================================
+String input test {'input': 'This is the stem\n\nThis is an option'} 
+
+start(): self.options:  Namespace(input='This is the stem\n\nThis is an option', inputfile=None, parser=None, showstats=True)
+stats: 1 questions found.
+stats: stem is 16 bytes long, 1 option found.
+
+=====================================================
+File input test 2 {'parser': 'BlockParser', 'file': 'data/driver'} 
+
+start(): self.options:  Namespace(input=None, inputfile='data/driver', parser='BlockParser', showstats=True)
+stats: 12 questions found.
+stats: stem is 954 bytes long, 4 options found.
+stats: stem is 68 bytes long, 4 options found.
+stats: stem is 81 bytes long, 4 options found.
+stats: stem is 109 bytes long, 4 options found.
+stats: stem is 21 bytes long, 4 options found.
+stats: stem is 78 bytes long, 4 options found.
+stats: stem is 71 bytes long, 4 options found.
+stats: stem is 93 bytes long, 4 options found.
+stats: stem is 83 bytes long, 4 options found.
+stats: stem is 90 bytes long, 4 options found.
+stats: stem is 53 bytes long, 4 options found.
+stats: stem is 165 bytes long, 0 options found.
+
+=====================================================
+File input test 1 {'parser': 'IndexParser', 'file': 'data/anarchy'} 
+
+start(): self.options:  Namespace(input=None, inputfile='data/anarchy', parser='IndexParser', showstats=True)
+stats: 10 questions found.
+stats: stem is 15 bytes long, 5 options found.
+stats: stem is 129 bytes long, 5 options found.
+stats: stem is 128 bytes long, 5 options found.
+stats: stem is 131 bytes long, 5 options found.
+stats: stem is 35 bytes long, 4 options found.
+stats: stem is 74 bytes long, 5 options found.
+stats: stem is 127 bytes long, 4 options found.
+stats: stem is 90 bytes long, 4 options found.
+stats: stem is 60 bytes long, 4 options found.
+stats: stem is 77 bytes long, 4 options found.
+

@@ -2,9 +2,6 @@
 import sys
 import argparse
 
-from parser import SingleParser
-from parser import IndexParser
-
 class Router:
     """
     The router collects all the input data and prepares it for parsing.
@@ -51,6 +48,9 @@ class Router:
                             version='%(prog)s Router version ' + self.version,
                             help='print the version information and exit')
 
+        parser.add_argument('-s', '--showstats', action='store_true', 
+                            help='print out some statistical information')
+
         parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
                             help='input string')
 
@@ -66,7 +66,8 @@ class Router:
         #~ import pdb; pdb.set_trace()
         filestr = inputstr = ''
 
-        print 'start(): self.options: ', repr(self.options)
+        if self.options.showstats:
+            print 'start(): self.options: ', repr(self.options)
 
         if (self.options.inputfile):
             try:
@@ -104,15 +105,20 @@ class Router:
             return
 
         try:
-            self.parser = self._get_parser(lines)
-            #self.parser.load_string(lines)
-            self.questions = self.parser.parse()
+            if lines:   
+                self.parser = self._get_parser(lines)
+                #self.parser.load_string(lines)
+                self.questions = self.parser.parse()
             
         except AttributeError:
             sys.stderr.write("Could not parse input, bad parser selected.")
             print sys.exc_info()[1]
             return
 
+        if self.options.showstats:
+            self.show_stats()
+
+    def show_stats(self):
         #~ import pdb; pdb.set_trace()
         print 'stats: %d questions found.' % len(self.questions)
 
@@ -124,12 +130,10 @@ class Router:
                 )
 
     def _get_parser(self, string):
-        if self.options.parser:
-            #~ Parser = type(self.options.parser, (), {})
-            Parser = self.forname("parser", self.options.parser)
-            return Parser(string)
-        
-        return SingleParser(string)
+        parser = self.options.parser if self.options.parser else 'SingleParser'
+        #~ Parser = type(parser, (), {})
+        Parser = self.forname("parser", parser)
+        return Parser(string)
 
     def forname(self, modname, classname):
         """ 
