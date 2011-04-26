@@ -13,7 +13,7 @@ class ChoiceTest:
             'parser': 'IndexParser',
             },
         'File input test 2': {
-            'file': 'driver',
+            'file': 'drivers',
             'parser': 'BlockParser',
             },
         'File input test 3': {
@@ -55,7 +55,6 @@ class ChoiceTest:
 
             r.parse_args(args)
             r.start()
-            print r.output
             del r
 
 if __name__ == '__main__':

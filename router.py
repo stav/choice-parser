@@ -23,17 +23,12 @@ class Router:
     # The list of questions
     questions = ''
 
-    # Property: output
-    # The rendered output
-    output = ''
-
     # Constructor
     # ------------------------------------------------------------------
 
     def __init__(self):
         options = None
         questions = ''
-        output = ''
 
     # Public methods
     # ------------------------------------------------------------------
@@ -101,34 +96,31 @@ class Router:
     # Protected methods
     # ------------------------------------------------------------------
 
-    def _render(self, str=None):
+    def _render(self, string=None):
+        input = self._get_input(string)
+        self._parse(input)
+
+    def _parse(self, string):
         try:
-            if str:
-                lines = str
-            else:
-                print 'Enter input text (ctrl-D to end)'
-                lines = [sys.stdin.read()]
-                lines = " ".join(lines)
-
-        except KeyboardInterrupt:
-            pass
-
-        # todo: add actual exception handler
-        except:
-            sys.stderr.write("Reading failed.\n")
-            print sys.exc_info()[0]
-            print sys.exc_info()[1]
-            return
-
-        try:
-            if lines:
-                self.parser = self._get_parser(lines)
+            if string:
+                self.parser = self._get_parser(string)
                 self.questions = self.parser.parse()
 
         except AttributeError:
             sys.stderr.write("Could not parse input, bad parser selected.")
             print sys.exc_info()[1]
             return
+
+    def _get_input(self, string):
+        if string: 
+            return string
+
+        try:
+            print 'Enter input text (ctrl-D to end)'
+            return " ".join([sys.stdin.read()])
+
+        except KeyboardInterrupt:
+            pass
 
     def _show_stats(self):
         #~ import pdb; pdb.set_trace()
@@ -153,6 +145,7 @@ class Router:
     def _write(self):
         try:
             output = open(self.options.outputfile, 'wb')
+
         except:
             sys.stderr.write("Could not open output file for writing.")
             print sys.exc_info()[1]
