@@ -1,4 +1,8 @@
+
 Multiple Choice Test Parser
+===========================
+
+Project designed by `Greg Dingle <https://github.com/gregdingle>`_
 
 I'd like to build a program that will take in a multiple choice test in free form text and output it in a structured form of stem and options. See http://en.wikipedia.org/wiki/Multiple_choice_test for more background.
 
