@@ -9,24 +9,24 @@ class ChoiceTest:
             'input': 'This is the stem\n\nThis is an option',
             },
         'File input test 1': {
-            'file': 'data/anarchy',
+            'file': 'anarchy',
             'parser': 'IndexParser',
             },
         'File input test 2': {
-            'file': 'data/driver',
+            'file': 'driver',
             'parser': 'BlockParser',
             },
         'File input test 3': {
-            'file': 'data/reading',
+            'file': 'reading',
             'parser': 'IndexParser',
             },
         'File input test 4': {
-            'file': 'data/writing',
+            'file': 'writing',
             'parser': 'IndexParser',
             },
         }
 
-    def run(self, stats):
+    def run(self, output=False, stats=False):
         print "Test results:\n"
 
         for name, case in self.cases.iteritems():
@@ -35,18 +35,22 @@ class ChoiceTest:
             r = Router()
             args = []
 
-            if stats: 
+            if stats:
                 args.append('-s')
 
-            if case.get('file' ): 
+            if output:
+                args.append('--outputfile')
+                args.append('output/%s' % case.get('file'))
+
+            if case.get('file' ):
                 args.append('--inputfile')
-                args.append(case.get('file' ))
+                args.append('input/%s' % case.get('file'))
 
-            if case.get('parser' ): 
+            if case.get('parser'):
                 args.append('--parser')
-                args.append(case.get('parser' ))
+                args.append(case.get('parser'))
 
-            if case.get('input'): 
+            if case.get('input'):
                 args.append(case.get('input'))
 
             r.parse_args(args)
@@ -55,6 +59,8 @@ class ChoiceTest:
             del r
 
 if __name__ == '__main__':
-    s = ChoiceTest()
+    output = True
     stats = True
-    s.run(stats)
+
+    s = ChoiceTest()
+    s.run(output, stats)

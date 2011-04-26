@@ -54,14 +54,17 @@ class Router:
         parser.add_argument('-s', '--showstats', action='store_true',
                             help='print out some statistical information')
 
-        parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
-                            help='input string')
+        parser.add_argument('--inputfile', type=str, metavar='INFL',
+                            help='input filename')
 
-        parser.add_argument('--inputfile', type=str, metavar='FILE',
-                            help='input file')
+        parser.add_argument('--outputfile', type=str, metavar='OUFL',
+                            help='output filename')
 
         parser.add_argument('--parser', type=str, metavar='PRSR',
                             help='parser class')
+
+        parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
+                            help='input string')
 
         self.options = parser.parse_args(options)
 
@@ -91,9 +94,9 @@ class Router:
         if self.options.showstats:
             self._show_stats()
 
-        self._format()
-
-        self._write()
+        if self.options.outputfile:
+            self._format()
+            self._write()
 
     # Protected methods
     # ------------------------------------------------------------------
@@ -148,13 +151,22 @@ class Router:
         pass
 
     def _write(self):
+        try:
+            output = open(self.options.outputfile, 'wb')
+        except:
+            sys.stderr.write("Could not open output file for writing.")
+            print sys.exc_info()[1]
+            return
+
         for question in self.questions:
-            print question.stem
+            output.writelines((question.stem, '\n'))
 
             for option in question.options:
-                print option
+                output.writelines((option, '\n'))
 
-            print
+            output.write('\n')
+
+        output.close()
 
     def _exit(self):
         sys.exit()
