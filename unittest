@@ -11,6 +11,7 @@ class ChoiceTest:
         'File input test 1': {
             'file': 'anarchy',
             'parser': 'IndexParser',
+            'writer': 'JsonWriter',
             },
         'File input test 2': {
             'file': 'drivers',
@@ -49,6 +50,10 @@ class ChoiceTest:
             if case.get('parser'):
                 args.append('--parser')
                 args.append(case.get('parser'))
+
+            if case.get('writer'):
+                args.append('--writer')
+                args.append(case.get('writer'))
 
             if case.get('input'):
                 args.append(case.get('input'))

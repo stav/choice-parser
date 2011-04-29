@@ -3,7 +3,7 @@ import sys
 import argparse
 
 ########################################################################
-class Router:
+class Router(object):
     """
     The router collects all the input data and prepares it for parsing.
     """
@@ -104,7 +104,7 @@ class Router:
 
         if self.options.outputfile:
             try:
-                output = open(self.options.outputfile, 'wb')
+                output = open(self.options.outputfile + self.writer.extension, 'wb')
 
             except:
                 sys.stderr.write("Could not open output file for writing.")
@@ -188,7 +188,7 @@ class Router:
         return classobj
 
 ########################################################################
-class Question:
+class Question(object):
     """
     A question is composed of a stem and a list of options.
     """

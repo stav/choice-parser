@@ -1,4 +1,7 @@
 
+import json
+from router import Question
+
 ########################################################################
 class Writer(object):
     """
@@ -9,7 +12,7 @@ class Writer(object):
     # ------------------------------------------------------------------
 
     def __init__(self):
-        pass
+        self.extension = ''
 
     # Public methods
     # ------------------------------------------------------------------
@@ -43,3 +46,34 @@ class TextWriter (Writer):
                 output.writelines((option, '\n'))
 
             output.write('\n')
+
+########################################################################
+class JsonWriter (Writer):
+    """
+    The Json writer outputs the questions in Json format.
+    """
+
+    # Constructor
+    # ------------------------------------------------------------------
+
+    def __init__(self):
+        super(JsonWriter, self).__init__()
+        self.extension = '.json'
+
+    # Public methods
+    # ------------------------------------------------------------------
+
+    def write(self, output, questions):
+        super(JsonWriter, self).write()
+        output.write(json.dumps(questions, default=self._serialize))
+
+    # Protected methods
+    # ------------------------------------------------------------------
+
+    def _serialize(self, python_object):
+        if isinstance(python_object, Question):
+            return {
+                'stem': python_object.stem, 
+                'options': python_object.options,
+                }
+        raise TypeError(repr(python_object) + ' is not really JSON serializable')

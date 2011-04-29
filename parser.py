@@ -105,6 +105,7 @@ class IndexParser (Parser):
         super(IndexParser, self).parse()
         questions = []
         question = None
+        #~ import pdb; pdb.set_trace()
 
         for token in self.tokens:
             #~ print 'token: ', token
