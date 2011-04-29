@@ -33,9 +33,7 @@ class Router:
     # Public methods
     # ------------------------------------------------------------------
 
-    def parse_args(self, options=sys.argv[1:]):
-        global version
-
+    def setup(self, options):
         parser = argparse.ArgumentParser(
             description='Parses and tokenizes text.',
             epilog='Refer to the documentation for more detailed information.',
@@ -46,8 +44,8 @@ class Router:
                             version='%(prog)s Router version ' + self.version,
                             help='print the version information and exit')
 
-        parser.add_argument('-s', '--showstats', action='store_true',
-                            help='print out some statistical information')
+        parser.add_argument('-s', '--silent', action='store_true',
+                            help='do not print out statistical information')
 
         parser.add_argument('--inputfile', type=str, metavar='INFL',
                             help='input filename')
@@ -58,17 +56,71 @@ class Router:
         parser.add_argument('--parser', type=str, metavar='PRSR',
                             help='parser class')
 
+        parser.add_argument('--writer', type=str, metavar='WRTR',
+                            help='writer class')
+
         parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
                             help='input string')
 
         self.options = parser.parse_args(options)
 
-    def start(self):
+    def start(self, options=sys.argv[1:]):
         #~ import pdb; pdb.set_trace()
-        filestr = inputstr = ''
+        self.setup(options)
 
-        if self.options.showstats:
-            print 'start(): self.options: ', repr(self.options)
+        self._parse(self._get_input())
+
+        if not self.options.silent:
+            self._show_stats()
+
+        self._format()
+        self._write()
+
+    # Protected methods
+    # ------------------------------------------------------------------
+
+    def _parse(self, string):
+        try:
+            if string:
+                self.parser = self._get_parser(string)
+                self.questions = self.parser.parse()
+
+        except AttributeError:
+            sys.stderr.write("Could not parse input, bad parser selected.")
+            print sys.exc_info()[1]
+            return
+
+    def _format(self):
+        pass
+
+    def _write(self):
+        try:
+            self.writer = self._get_writer()
+
+        except AttributeError:
+            sys.stderr.write("Could not declare writer.")
+            print sys.exc_info()[1]
+            return
+
+        if self.options.outputfile:
+            try:
+                output = open(self.options.outputfile, 'wb')
+
+            except:
+                sys.stderr.write("Could not open output file for writing.")
+                print sys.exc_info()[1]
+                return
+
+        else:
+            output = sys.stdout
+            
+        self.writer.write(output, self.questions)
+
+        if self.options.outputfile:
+            output.close()
+
+    def _get_input(self):
+        filestr = inputstr = ''
 
         if self.options.inputfile:
             try:
@@ -84,34 +136,7 @@ class Router:
         if self.options.input:
             inputstr = self.options.input
 
-        self._render(('\n'.join((filestr, inputstr))).strip())
-
-        if self.options.showstats:
-            self._show_stats()
-
-        if self.options.outputfile:
-            self._format()
-            self._write()
-
-    # Protected methods
-    # ------------------------------------------------------------------
-
-    def _render(self, string=None):
-        input = self._get_input(string)
-        self._parse(input)
-
-    def _parse(self, string):
-        try:
-            if string:
-                self.parser = self._get_parser(string)
-                self.questions = self.parser.parse()
-
-        except AttributeError:
-            sys.stderr.write("Could not parse input, bad parser selected.")
-            print sys.exc_info()[1]
-            return
-
-    def _get_input(self, string):
+        string = ('\n'.join((filestr, inputstr))).strip()
         if string: 
             return string
 
@@ -122,8 +147,20 @@ class Router:
         except KeyboardInterrupt:
             pass
 
+    def _get_parser(self, string):
+        parser = self.options.parser if self.options.parser else 'SingleParser'
+        #~ Parser = type(parser, (), {})
+        Parser = self.__forname("parser", parser)
+        return Parser(string)
+
+    def _get_writer(self):
+        writer = self.options.writer if self.options.writer else 'TextWriter'
+        Writer = self.__forname("writer", writer)
+        return Writer()
+
     def _show_stats(self):
         #~ import pdb; pdb.set_trace()
+        print 'stats: self.options: ', repr(self.options)
         print 'stats: %d questions found.' % len(self.questions)
 
         for question in self.questions:
@@ -132,34 +169,6 @@ class Router:
                 len(question.options),
                 's' if len(question.options) != 1 else ''
                 )
-
-    def _get_parser(self, string):
-        parser = self.options.parser if self.options.parser else 'SingleParser'
-        #~ Parser = type(parser, (), {})
-        Parser = self.__forname("parser", parser)
-        return Parser(string)
-
-    def _format(self):
-        pass
-
-    def _write(self):
-        try:
-            output = open(self.options.outputfile, 'wb')
-
-        except:
-            sys.stderr.write("Could not open output file for writing.")
-            print sys.exc_info()[1]
-            return
-
-        for question in self.questions:
-            output.writelines((question.stem, '\n'))
-
-            for option in question.options:
-                output.writelines((option, '\n'))
-
-            output.write('\n')
-
-        output.close()
 
     def _exit(self):
         sys.exit()

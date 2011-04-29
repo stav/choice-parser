@@ -5,6 +5,4 @@ from router import Router
 
 if __name__ == "__main__":
     r = Router()
-    r.parse_args()
     r.start()
-    print r.output

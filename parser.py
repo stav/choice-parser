@@ -10,17 +10,6 @@ class Parser(object):
     what are the options.
     """
 
-    # Properties
-    # ------------------------------------------------------------------
-
-    # Property: str
-    # The string
-    #~ str = ''
-
-    # Property: tokens
-    # The list of tokens
-    #~ tokens = []
-
     # Constructor
     # ------------------------------------------------------------------
 
@@ -28,6 +17,9 @@ class Parser(object):
         self.str = str
         self.tokens  = []
         self._tokenize()
+
+    # Public methods
+    # ------------------------------------------------------------------
 
     def parse(self):
         """

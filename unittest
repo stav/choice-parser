@@ -26,7 +26,7 @@ class ChoiceTest:
             },
         }
 
-    def run(self, output=False, stats=False):
+    def run(self, output=False, silent=False):
         print "Test results:\n"
 
         for name, case in self.cases.iteritems():
@@ -35,7 +35,7 @@ class ChoiceTest:
             r = Router()
             args = []
 
-            if stats:
+            if silent:
                 args.append('-s')
 
             if output:
@@ -53,13 +53,12 @@ class ChoiceTest:
             if case.get('input'):
                 args.append(case.get('input'))
 
-            r.parse_args(args)
-            r.start()
+            r.start(args)
             del r
 
 if __name__ == '__main__':
     output = True
-    stats = True
+    silent = False
 
     s = ChoiceTest()
-    s.run(output, stats)
+    s.run(output, silent)
