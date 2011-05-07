@@ -73,7 +73,7 @@ class JsonWriter (Writer):
     def _serialize(self, python_object):
         if isinstance(python_object, Question):
             return {
-                'stem': python_object.stem, 
+                'stem': python_object.stem,
                 'options': python_object.options,
                 }
         raise TypeError(repr(python_object) + ' is not really JSON serializable')

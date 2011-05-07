@@ -23,11 +23,11 @@ class Parser(object):
 
     def parse(self):
         """
-        Spins thru the tokens and creates a list of question objects for 
+        Spins thru the tokens and creates a list of question objects for
         each stem found, adds in the options and returns the whole list
         to the router.
         """
-        if len(self.tokens) == 0: 
+        if len(self.tokens) == 0:
             return []
 
     # Protected methods
@@ -38,7 +38,7 @@ class Parser(object):
         Initializes [[self.tokens]].
         """
 
-        str = self.str.strip()
+        str = self.str
 
         # Find prefix/suffix
         #~ while True:
@@ -113,7 +113,7 @@ class IndexParser (Parser):
             if s and s.group():
                 if question: questions.append(question)
                 question = Question()
-                question.stem = token.strip()
+                question.stem = token
                 continue
 
             o = re.match(r"^\s*[a-zA-Z]+[.)] ", token)

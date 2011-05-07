@@ -25,6 +25,11 @@ class ChoiceTest:
             'file': 'writing',
             'parser': 'IndexParser',
             },
+        'File input test 5': {
+            'file': 'choices',
+            'parser': 'IndexParser',
+            'filters': 'QualifiedFilter',
+            },
         }
 
     def run(self, output=False, silent=False):
@@ -39,20 +44,24 @@ class ChoiceTest:
             if silent:
                 args.append('-s')
 
-            if output:
-                args.append('--outputfile')
-                args.append('output/%s' % case.get('file'))
-
             if case.get('file' ):
-                args.append('--inputfile')
+                args.append('-i')
                 args.append('input/%s' % case.get('file'))
 
+            if output:
+                args.append('-o')
+                args.append('output/%s' % case.get('file'))
+
             if case.get('parser'):
-                args.append('--parser')
+                args.append('-p')
                 args.append(case.get('parser'))
 
+            if case.get('filters'):
+                args.append('-f')
+                args.append(case.get('filters'))
+
             if case.get('writer'):
-                args.append('--writer')
+                args.append('-w')
                 args.append(case.get('writer'))
 
             if case.get('input'):

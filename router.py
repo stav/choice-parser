@@ -47,25 +47,31 @@ class Router(object):
         parser.add_argument('-s', '--silent', action='store_true',
                             help='do not print out statistical information')
 
-        parser.add_argument('--inputfile', type=str, metavar='INFL',
+        parser.add_argument('-q', '--qualify', action='store_true',
+                            help='Qualify the output with the question parts') # e.g. "stem = ...."
+
+        parser.add_argument('-i', dest='inputfile', type=str, metavar='INFL',
                             help='input filename')
 
-        parser.add_argument('--outputfile', type=str, metavar='OUFL',
+        parser.add_argument('-o', dest='outputfile', type=str, metavar='OUFL',
                             help='output filename')
 
-        parser.add_argument('--parser', type=str, metavar='PRSR',
+        parser.add_argument('-p', dest='parser', type=str, metavar='PRSR',
                             help='parser class')
 
-        parser.add_argument('--filter', type=str, metavar='FLTR',
-                            help='filterer class')
+        parser.add_argument('-f', dest='filters', type=str, metavar='FLTRs',
+                            help='filterer classes "F1, F2,... Fn"')
 
-        parser.add_argument('--writer', type=str, metavar='WRTR',
+        parser.add_argument('-w', dest='writer', type=str, metavar='WRTR',
                             help='writer class')
 
         parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
                             help='input string')
 
         self.options = parser.parse_args(options)
+
+        # 'asdf , qwer' ==>> ['asdf', 'qwer']
+        self.options.filters = [f.strip() for f in self.options.filters.split(',')] if self.options.filters else []
 
     def start(self, options=sys.argv[1:]):
         #~ import pdb; pdb.set_trace()
@@ -86,6 +92,7 @@ class Router(object):
         try:
             if string:
                 self.parser = self._get_parser(string)
+                print 'parser: %s' % self.parser
                 self.questions = self.parser.parse()
 
         except AttributeError:
@@ -95,14 +102,16 @@ class Router(object):
 
     def _filter(self):
         try:
-            self.filterer = self._get_filterer()
+            self.filters = self._get_filters()
 
         except AttributeError:
-            sys.stderr.write("Could not declare filterer.")
+            sys.stderr.write("Could not declare filters.")
             print sys.exc_info()[1]
             return
-            
-        self.questions = self.filterer.filter(self.questions)
+
+        for filter in self.filters:
+            print 'filter: %s' % filter
+            self.questions = filter.filter(self.questions)
 
     def _write(self):
         try:
@@ -124,36 +133,33 @@ class Router(object):
 
         else:
             output = sys.stdout
-            
+
         self.writer.write(output, self.questions)
 
         if self.options.outputfile:
             output.close()
 
     def _get_input(self):
-        filestr = inputstr = ''
+        #~ import pdb; pdb.set_trace()
 
         if self.options.inputfile:
             try:
                 f = open(self.options.inputfile, 'rb')
-                #self.input = [x.strip() for x in f if x.strip()]
                 filestr = f.read()
                 f.close()
+                # note: any command line input is ignored
+                return filestr
 
             except IOError:
                 print 'Could not read file.', sys.exc_info()[1]
                 self._exit()
 
         if self.options.input:
-            inputstr = self.options.input
-
-        string = ('\n'.join((filestr, inputstr))).strip()
-        if string: 
-            return string
+            return self.options.input
 
         try:
             print 'Enter input text (ctrl-D to end)'
-            return " ".join([sys.stdin.read()])
+            return sys.stdin.read()
 
         except KeyboardInterrupt:
             pass
@@ -162,22 +168,31 @@ class Router(object):
         parser = self.options.parser if self.options.parser else 'SingleParser'
         #~ Parser = type(parser, (), {})
         Parser = self.__forname("parser", parser)
-        return Parser(string)
+        if Parser:
+            return Parser(string)
 
-    def _get_filterer(self):
-        filter = self.options.filter if self.options.filter else 'WhitespaceFilter'
-        Filter = self.__forname("filter", filter)
-        return Filter()
+    def _get_filters(self):
+        for filter in self.options.filters:
+            Filter = self.__forname("filter", filter)
+            if Filter:
+                yield Filter()
+
+        # -q command line switch is a shortcut for the QualifiedFilter filter
+        if self.options.qualify:
+            Filter = self.__forname("filter", 'QualifiedFilter')
+            if Filter:
+                yield Filter()
 
     def _get_writer(self):
         writer = self.options.writer if self.options.writer else 'TextWriter'
         Writer = self.__forname("writer", writer)
-        return Writer()
+        if Writer:
+            return Writer()
 
     def _show_stats(self):
         #~ import pdb; pdb.set_trace()
         print 'stats: self.options: ', repr(self.options)
-        print 'stats: %d questions found.' % len(self.questions)
+        print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
 
         for question in self.questions:
             print 'stats: stem is %d bytes long, %d option%s found.' % (
@@ -199,9 +214,13 @@ class Router(object):
             from http://mail.python.org/pipermail/python-list/2003-March/192221.html
               on http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
         """
-        module = __import__(modname)
-        classobj = getattr(module, classname)
-        return classobj
+        try:
+            module = __import__(modname)
+            classobj = getattr(module, classname)
+            return classobj
+
+        except AttributeError:
+            print modname, sys.exc_info()[1]
 
 ########################################################################
 class Question(object):
