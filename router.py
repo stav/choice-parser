@@ -56,6 +56,9 @@ class Router(object):
         parser.add_argument('--parser', type=str, metavar='PRSR',
                             help='parser class')
 
+        parser.add_argument('--filter', type=str, metavar='FLTR',
+                            help='filterer class')
+
         parser.add_argument('--writer', type=str, metavar='WRTR',
                             help='writer class')
 
@@ -73,7 +76,7 @@ class Router(object):
         if not self.options.silent:
             self._show_stats()
 
-        self._format()
+        self._filter()
         self._write()
 
     # Protected methods
@@ -90,8 +93,16 @@ class Router(object):
             print sys.exc_info()[1]
             return
 
-    def _format(self):
-        pass
+    def _filter(self):
+        try:
+            self.filterer = self._get_filterer()
+
+        except AttributeError:
+            sys.stderr.write("Could not declare filterer.")
+            print sys.exc_info()[1]
+            return
+            
+        self.questions = self.filterer.filter(self.questions)
 
     def _write(self):
         try:
@@ -152,6 +163,11 @@ class Router(object):
         #~ Parser = type(parser, (), {})
         Parser = self.__forname("parser", parser)
         return Parser(string)
+
+    def _get_filterer(self):
+        filter = self.options.filter if self.options.filter else 'WhitespaceFilter'
+        Filter = self.__forname("filter", filter)
+        return Filter()
 
     def _get_writer(self):
         writer = self.options.writer if self.options.writer else 'TextWriter'
