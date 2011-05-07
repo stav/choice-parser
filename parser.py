@@ -1,7 +1,7 @@
 
 import re
 
-from router import Question
+from question import Question
 
 ########################################################################
 class Parser(object):
@@ -37,9 +37,6 @@ class Parser(object):
         """Tokenizes.
         Initializes [[self.tokens]].
         """
-
-        str = self.str
-
         # Find prefix/suffix
         #~ while True:
             #~ match = re.match(r"^(\s*<[^>]+>\s*)", str)
@@ -47,7 +44,6 @@ class Parser(object):
             #~ if self.prefix is None: self.prefix = ''
             #~ self.prefix += match.group(0)
             #~ str = str[len(match.group(0)):]
-#~
         #~ while True:
             #~ match = re.findall(r"(\s*<[^>]+>[\s\n\r]*)$", str)
             #~ if not match: break
@@ -55,8 +51,8 @@ class Parser(object):
             #~ self.suffix = match[0] + self.suffix
             #~ str = str[:-len(match[0])]
 
-        # Split by the element separators
-        for token in re.split('(.*)', str):
+        # Split the string by newlines
+        for token in re.split('(.*)', self.str):
             if token.strip() != '':
                 self.tokens.append(token)
 
