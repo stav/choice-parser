@@ -27,15 +27,17 @@ class Parser(object):
         each stem found, adds in the options and returns the whole list
         to the router.
         """
-        if len(self.tokens) == 0:
-            return []
+        pass
 
     # Protected methods
     # ------------------------------------------------------------------
 
     def _tokenize(self):
-        """Tokenizes.
-        Initializes [[self.tokens]].
+        """
+        Each class in this parser module, by deafult, first splits up the 
+        intput into tokens.  
+        
+        ..note: Currently the tokenizing is based on line-breaks.
         """
         # Find prefix/suffix
         #~ while True:
@@ -51,7 +53,7 @@ class Parser(object):
             #~ self.suffix = match[0] + self.suffix
             #~ str = str[:-len(match[0])]
 
-        # Split the string by newlines
+        # Split the input string by newlines
         for token in re.split('(.*)', self.str):
             if token.strip() != '':
                 self.tokens.append(token)
@@ -60,7 +62,17 @@ class Parser(object):
 class SingleParser (Parser):
     """
     The single parser assumes only one question and takes the first line
-    to be the stem and the rest are options.
+    to be the stem and the rest of the lines are the options.
+
+    >>> from router import Router
+    >>> r = Router()
+    >>> r.start(['-i', 'input/anarchy',
+    ...          '-o', 'output/anarchy',
+    ...          '-p', 'SingleParser',
+    ...          ])
+    stats: ...
+    stats: 1 question found.
+    stats: stem is 38 bytes long, 72 options found.
     """
 
     # Constructor
@@ -73,7 +85,7 @@ class SingleParser (Parser):
     # ------------------------------------------------------------------
 
     def parse(self):
-        super(SingleParser, self).parse()
+        if len(self.tokens) == 0: return []
 
         question = Question()
         question.stem = self.tokens[0]
@@ -86,6 +98,16 @@ class IndexParser (Parser):
     """
     The index parser determines stems to be prefixed with numbers and the
     options to be prefixed with letters.
+
+    >>> from router import Router
+    >>> r = Router()
+    >>> r.start(['-i', 'input/anarchy',
+    ...          '-o', 'output/anarchy',
+    ...          '-p', 'IndexParser',
+    ...          ])
+    stats: ...
+    stats: 10 questions found.
+    ...
     """
 
     # Constructor
@@ -98,7 +120,8 @@ class IndexParser (Parser):
     # ------------------------------------------------------------------
 
     def parse(self):
-        super(IndexParser, self).parse()
+        if len(self.tokens) == 0: return []
+
         questions = []
         question = None
         #~ import pdb; pdb.set_trace()
@@ -130,6 +153,16 @@ class BlockParser (Parser):
     """
     The block parser determines stems to be all the text in between the
     options.
+
+    >>> from router import Router
+    >>> r = Router()
+    >>> r.start(['-i', 'input/drivers',
+    ...          '-o', 'output/drivers',
+    ...          '-p', 'BlockParser',
+    ...          ])
+    stats: ...
+    stats: 12 questions found.
+    ...
     """
 
     # Constructor
@@ -142,7 +175,8 @@ class BlockParser (Parser):
     # ------------------------------------------------------------------
 
     def parse(self):
-        super(BlockParser, self).parse()
+        if len(self.tokens) == 0: return []
+
         questions = []
         question = Question()
         option = False
@@ -174,3 +208,7 @@ class BlockParser (Parser):
         if question: questions.append(question)
 
         return questions
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(optionflags = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE)

@@ -29,8 +29,10 @@ class Router(object):
     # ------------------------------------------------------------------
 
     def __init__(self):
-        options = None
-        questions = ''
+        self.questions = ''
+        self.options   = None
+        self.parser    = None
+        self.filters   = []
 
     # Public methods
     # ------------------------------------------------------------------
@@ -42,9 +44,12 @@ class Router(object):
             prog=sys.argv[0],
             )
 
-        parser.add_argument('-v', '--version', action='version',
+        parser.add_argument('-V', '--version', action='version',
                             version='%(prog)s Router version ' + self.version,
                             help='print the version information and exit')
+
+        parser.add_argument('-v', '--verbose', action='store_true',
+                            help='verbose output including doc-testing')
 
         parser.add_argument('-s', '--silent', action='store_true',
                             help='do not print out statistical information')
@@ -80,11 +85,11 @@ class Router(object):
         self.setup(options)
 
         self._parse(self._get_input())
+        self._filter()
 
         if not self.options.silent:
             self._show_stats()
 
-        self._filter()
         self._write()
 
     # Protected methods
@@ -94,7 +99,6 @@ class Router(object):
         try:
             if string:
                 self.parser = self._get_parser(string)
-                print 'parser: %s' % self.parser
                 self.questions = self.parser.parse()
 
         except AttributeError:
@@ -104,7 +108,7 @@ class Router(object):
 
     def _filter(self):
         try:
-            self.filters = self._get_filters()
+            self.filters = list(self._get_filters())
 
         except AttributeError:
             sys.stderr.write("Could not declare filters.")
@@ -112,7 +116,6 @@ class Router(object):
             return
 
         for filter in self.filters:
-            print 'filter: %s' % filter
             self.questions = filter.filter(self.questions)
 
     def _write(self):
@@ -194,6 +197,8 @@ class Router(object):
     def _show_stats(self):
         #~ import pdb; pdb.set_trace()
         print 'stats: self.options: ', repr(self.options)
+        print 'stats: parser: %s' % self.parser
+        print 'stats: filters: %s' % self.filters
         print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
 
         for question in self.questions:
