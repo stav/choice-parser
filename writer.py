@@ -1,5 +1,6 @@
 
 import json
+
 from router import Question
 
 ########################################################################
@@ -25,6 +26,20 @@ class TextWriter (Writer):
     """
     The text writer just attempts to write the questions out in the same
     basic, tho not nessisarily identical, format.
+
+    >>> import sys
+    >>> from question import Question
+    >>> q = Question()
+    >>> q.stem = '1. What is the TextWriter?'
+    >>> q.options.append('a. A choice-parser component.')
+    >>> q.options.append('b. A Writer class.')
+    >>> q.options.append('c. Both of the above.')
+    >>> w = TextWriter()
+    >>> w.write(sys.stdout, [q])
+    1. What is the TextWriter?
+    a. A choice-parser component.
+    b. A Writer class.
+    c. Both of the above.
     """
 
     # Constructor
@@ -51,6 +66,18 @@ class TextWriter (Writer):
 class JsonWriter (Writer):
     """
     The Json writer outputs the questions in Json format.
+
+    >>> import sys
+    >>> from question import Question
+    >>> q = Question()
+    >>> q.stem = '1. What is the JsonWriter?'
+    >>> q.options.append('a. A choice-parser component.')
+    >>> q.options.append('b. A Writer class.')
+    >>> q.options.append('c. Both of the above.')
+    >>> w = JsonWriter()
+    >>> w.write(sys.stdout, [q])
+    [{"options": ["a. A choice-parser component.", "b. A Writer class.", 
+    "c. Both of the above."], "stem": "1. What is the JsonWriter?"}]
     """
 
     # Constructor

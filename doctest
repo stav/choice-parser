@@ -2,11 +2,55 @@
 # -*- coding: utf-8 -*-
 """
 This is the choice-parser Doctest documentation unit testing application.
+
+>>> from router import Router
+>>> r = Router()
+
+########################################################################
+>>> r.load(['-i', 'input/anarchy',
+...         '-p', 'IndexParser',
+...         '-s',
+...         ])
+>>> len(r.questions)
+10
+
+########################################################################
+>>> r.load(['-i', 'input/drivers',
+...         '-p', 'BlockParser',
+...         '-s',
+...         ])
+>>> len(r.questions)
+12
+
+########################################################################
+>>> r.load(['-i', 'input/reading',
+...         '-p', 'IndexParser',
+...         '-s',
+...         ])
+>>> len(r.questions)
+15
+
+########################################################################
+>>> r.load(['-i', 'input/writing',
+...         '-p', 'IndexParser',
+...         '-s',
+...         ])
+>>> len(r.questions)
+10
+
+########################################################################
+>>> r.load(['-i', 'input/choices',
+...         '-p', 'IndexParser',
+...         '-s',
+...         ])
+>>> len(r.questions)
+7
 """
 import doctest
 import router
 import parser
 import filter
+import writer
 
 passed = failed = 0
 
@@ -41,6 +85,9 @@ if __name__ == '__main__':
 
     print '\nThen we test the filter to see if it passes the test for robustness.'
     test(filter)
+
+    print '\nThen we test the writer to see if it passes the test for robustness.'
+    test(writer)
 
     print '\nThen we test the router to see if it passes the test for robustness.'
     test(router)

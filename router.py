@@ -8,29 +8,6 @@ from question import Question
 class Router(object):
     """
     The router collects all the input data and prepares it for parsing.
-
-    >>> r = Router()
-
-    This tests the anarchy file with the IndexParser and the JsonWriter.
-
-    >>> r.start(['-i', 'input/anarchy',
-    ...          '-o', 'output/anarchy',
-    ...          '-p', 'IndexParser',
-    ...          '-w', 'JsonWriter',
-    ...          ])
-    stats: ...
-    stats: 10 questions found.
-    ...
-
-    This tests the drivers license test with the BlockParser.
-
-    >>> r.start(['-i', 'input/drivers',
-    ...          '-o', 'output/drivers',
-    ...          '-p', 'BlockParser',
-    ...          ])
-    stats: ...
-    stats: 12 questions found.
-    ...
     """
 
     # Properties
@@ -61,6 +38,13 @@ class Router(object):
     # ------------------------------------------------------------------
 
     def setup(self, options):
+        """
+        >>> options = ['--qualify']
+        >>> r = Router()
+        >>> r.setup(options)
+        >>> r.options
+        Namespace... qualify=True...
+        """
         parser = argparse.ArgumentParser(
             description='Parses and tokenizes text.',
             epilog='Refer to the documentation for more detailed information.',
@@ -98,14 +82,34 @@ class Router(object):
         parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
                             help='input string')
 
+        #~ import pdb; pdb.set_trace()
         self.options = parser.parse_args(options)
 
         # 'asdf , qwer' ==>> ['asdf', 'qwer']
         self.options.filters = [f.strip() for f in self.options.filters.split(',')] if self.options.filters else []
 
+    def load(self, options=sys.argv[1:]):
+        """
+        The primary Router method to handle: setup, parsing and filtering.
+
+        >>> r = Router()
+        >>> r.load(['-s', '''This is the stem
+        ... This is an option'''])
+        >>> len(r.questions)
+        1
+        """
+        #~ import pdb; pdb.set_trace()
+        self.setup(options)
+
+        self.parse(self.get_input())
+        self.filter()
+
+        if not self.options.silent:
+            self.show_stats()
+
     def start(self, options=sys.argv[1:]):
         """
-        A. The first test is a simple command line input test.
+        Loads input and writes output.
 
         >>> r = Router()
         >>> r.start(['''This is the stem
@@ -116,21 +120,13 @@ class Router(object):
         This is the stem
         This is an option
         """
-        #~ import pdb; pdb.set_trace()
-        self.setup(options)
-
-        self._parse(self.get_input())
-        self._filter()
-
-        if not self.options.silent:
-            self._show_stats()
-
-        self._write()
+        self.load(options)
+        self.write()
 
     # Protected methods
     # ------------------------------------------------------------------
 
-    def _parse(self, string):
+    def parse(self, string):
         try:
             if string:
                 self.parser = self._get_parser(string)
@@ -141,7 +137,7 @@ class Router(object):
             print sys.exc_info()[1]
             return
 
-    def _filter(self):
+    def filter(self):
         try:
             self.filters = list(self._get_filters())
 
@@ -153,7 +149,7 @@ class Router(object):
         for filter in self.filters:
             self.questions = filter.filter(self.questions)
 
-    def _write(self):
+    def write(self):
         try:
             self.writer = self._get_writer()
 
@@ -205,6 +201,20 @@ class Router(object):
         except KeyboardInterrupt:
             pass
 
+    def show_stats(self):
+        #~ import pdb; pdb.set_trace()
+        print 'stats: self.options: ', repr(self.options)
+        print 'stats: parser: %s' % self.parser
+        print 'stats: filters: %s' % self.filters
+        print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
+
+        for question in self.questions:
+            print 'stats: stem is %d bytes long, %d option%s found.' % (
+                len(question.stem),
+                len(question.options),
+                's' if len(question.options) != 1 else ''
+                )
+
     def _get_parser(self, string):
         parser = self.options.parser if self.options.parser else 'SingleParser'
         #~ Parser = type(parser, (), {})
@@ -229,20 +239,6 @@ class Router(object):
         Writer = self.__forname("writer", writer)
         if Writer:
             return Writer()
-
-    def _show_stats(self):
-        #~ import pdb; pdb.set_trace()
-        print 'stats: self.options: ', repr(self.options)
-        print 'stats: parser: %s' % self.parser
-        print 'stats: filters: %s' % self.filters
-        print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
-
-        for question in self.questions:
-            print 'stats: stem is %d bytes long, %d option%s found.' % (
-                len(question.stem),
-                len(question.options),
-                's' if len(question.options) != 1 else ''
-                )
 
     def _exit(self):
         sys.exit()
