@@ -64,15 +64,15 @@ class SingleParser (Parser):
     The single parser assumes only one question and takes the first line
     to be the stem and the rest of the lines are the options.
 
-    >>> from router import Router
-    >>> r = Router()
-    >>> r.start(['-i', 'input/anarchy',
-    ...          '-o', 'output/anarchy',
-    ...          '-p', 'SingleParser',
-    ...          ])
-    stats: ...
-    stats: 1 question found.
-    stats: stem is 38 bytes long, 72 options found.
+    >>> from parser import SingleParser
+    >>> i = '''This is the stem
+    ... This is the first option
+    ... This is the second option
+    ... '''
+    >>> p = SingleParser(i)
+    >>> q = p.parse()[0]
+    >>> len(q.options)
+    2
     """
 
     # Constructor
@@ -100,14 +100,13 @@ class IndexParser (Parser):
     options to be prefixed with letters.
 
     >>> from router import Router
+    >>> from parser import IndexParser
     >>> r = Router()
-    >>> r.start(['-i', 'input/anarchy',
-    ...          '-o', 'output/anarchy',
-    ...          '-p', 'IndexParser',
-    ...          ])
-    stats: ...
-    stats: 10 questions found.
-    ...
+    >>> i = r.get_input('input/anarchy')
+    >>> p = IndexParser(i)
+    >>> Q = p.parse()
+    >>> len(Q)
+    10
     """
 
     # Constructor
@@ -155,14 +154,13 @@ class BlockParser (Parser):
     options.
 
     >>> from router import Router
+    >>> from parser import BlockParser
     >>> r = Router()
-    >>> r.start(['-i', 'input/drivers',
-    ...          '-o', 'output/drivers',
-    ...          '-p', 'BlockParser',
-    ...          ])
-    stats: ...
-    stats: 12 questions found.
-    ...
+    >>> i = r.get_input('input/drivers')
+    >>> p = BlockParser(i)
+    >>> Q = p.parse()
+    >>> len(Q)
+    12
     """
 
     # Constructor
@@ -208,7 +206,3 @@ class BlockParser (Parser):
         if question: questions.append(question)
 
         return questions
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(optionflags = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE)

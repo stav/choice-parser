@@ -2,41 +2,51 @@
 # -*- coding: utf-8 -*-
 """
 This is the choice-parser Doctest documentation unit testing application.
-
-1. The first test is a simple command line input test.
-
->>> from router import Router
->>> r = Router()
->>> r.start(['''This is the stem
-... This is an option'''])
-stats: ...
-stats: 1 question found.
-stats: stem is 16 bytes long, 1 option found.
-This is the stem
-This is an option
-
-2. The second tests the anarchy file with the IndexParser and the JsonWriter.
-
->>> r.start(['-i', 'input/anarchy',
-...          '-o', 'output/anarchy',
-...          '-p', 'IndexParser',
-...          '-w', 'JsonWriter',
-...          ])
-stats: ...
-stats: 10 questions found.
-...
-
-3. The third tests the drivers license test with the BlockParser.
-
->>> r.start(['-i', 'input/drivers',
-...          '-o', 'output/drivers',
-...          '-p', 'BlockParser',
-...          ])
-stats: ...
-stats: 12 questions found.
-...
 """
+import doctest
+import router
+import parser
+import filter
+
+passed = failed = 0
+
+def test(module = None):
+    global passed, failed
+    flags = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
+    
+    if module:
+        print module
+        results = doctest.testmod(module, optionflags = flags)
+
+    else:
+        results = doctest.testmod(optionflags = flags)
+
+    if results.attempted == 0:
+        print "No tests were attempted:",
+    elif results.failed == 0:
+        print "Test passed.",
+
+    print results
+    
+    passed += results.attempted - results.failed
+    failed += results.failed
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod(optionflags = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE)
+
+    print '\nThe first thing we do is test that all the input files pass muster.'
+    test()
+
+    print '\nThen we test the parser to see if it passes the test for robustness.'
+    test(parser)
+
+    print '\nThen we test the filter to see if it passes the test for robustness.'
+    test(filter)
+
+    print '\nThen we test the router to see if it passes the test for robustness.'
+    test(router)
+
+    if failed:
+        print failed, 'test%s failed.' % ('s' if failed !=1 else '')
+    else:
+        if passed > 0:
+            print 'All tests passed'

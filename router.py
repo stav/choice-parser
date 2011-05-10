@@ -8,6 +8,29 @@ from question import Question
 class Router(object):
     """
     The router collects all the input data and prepares it for parsing.
+
+    >>> r = Router()
+
+    This tests the anarchy file with the IndexParser and the JsonWriter.
+
+    >>> r.start(['-i', 'input/anarchy',
+    ...          '-o', 'output/anarchy',
+    ...          '-p', 'IndexParser',
+    ...          '-w', 'JsonWriter',
+    ...          ])
+    stats: ...
+    stats: 10 questions found.
+    ...
+
+    This tests the drivers license test with the BlockParser.
+
+    >>> r.start(['-i', 'input/drivers',
+    ...          '-o', 'output/drivers',
+    ...          '-p', 'BlockParser',
+    ...          ])
+    stats: ...
+    stats: 12 questions found.
+    ...
     """
 
     # Properties
@@ -81,10 +104,22 @@ class Router(object):
         self.options.filters = [f.strip() for f in self.options.filters.split(',')] if self.options.filters else []
 
     def start(self, options=sys.argv[1:]):
+        """
+        A. The first test is a simple command line input test.
+
+        >>> r = Router()
+        >>> r.start(['''This is the stem
+        ... This is an option'''])
+        stats: ...
+        stats: 1 question found.
+        stats: stem is 16 bytes long, 1 option found.
+        This is the stem
+        This is an option
+        """
         #~ import pdb; pdb.set_trace()
         self.setup(options)
 
-        self._parse(self._get_input())
+        self._parse(self.get_input())
         self._filter()
 
         if not self.options.silent:
@@ -144,12 +179,13 @@ class Router(object):
         if self.options.outputfile:
             output.close()
 
-    def _get_input(self):
+    def get_input(self, inputfile=None):
         #~ import pdb; pdb.set_trace()
 
-        if self.options.inputfile:
+        inputfile = self.options.inputfile if not inputfile else inputfile
+        if inputfile:
             try:
-                f = open(self.options.inputfile, 'rb')
+                f = open(inputfile, 'rb')
                 filestr = f.read()
                 f.close()
                 # note: any command line input is ignored
