@@ -2,6 +2,7 @@
 import sys
 import argparse
 
+from subprocess import Popen, PIPE, STDOUT
 from question import Question
 
 ########################################################################
@@ -31,9 +32,10 @@ class Router(object):
     def __init__(self):
         self.questions = ''
         self.options   = None
+        self.converter = None
         self.parser    = None
-        self.filters   = []
         self.mogrifyers= []
+        self.filters   = []
 
     # Public methods
     # ------------------------------------------------------------------
@@ -72,6 +74,9 @@ class Router(object):
 
         command_line.add_argument('-o', dest='outputfile', type=str, metavar='OUFL',
                             help='output filename')
+
+        command_line.add_argument('-c', dest='converter', type=str, metavar='CVTR',
+                            help='converter class')
 
         command_line.add_argument('-m', dest='mogrifyers', type=str, metavar='MGRFs',
                             help='mogrifyer classes "M1, M2,... Mn"')
@@ -202,16 +207,8 @@ class Router(object):
 
         inputfile = self.options.inputfile if not inputfile else inputfile
         if inputfile:
-            try:
-                f = open(inputfile, 'rb')
-                filestr = f.read()
-                f.close()
-                # note: any command line input is ignored
-                return filestr
-
-            except IOError:
-                print 'Could not read file.', sys.exc_info()[1]
-                self._exit()
+            # note: any command line input is ignored
+            return self._get_file_contents(inputfile)
 
         if self.options.input:
             return self.options.input
@@ -239,6 +236,26 @@ class Router(object):
 
     # Protected methods
     # ------------------------------------------------------------------
+
+    def _get_file_contents(self, inputfile):
+        if self.options and self.options.converter and self.options.converter.lower() == 'pdftotext':
+            command_line = ['pdftotext', '-raw', inputfile, '-']
+            proc = Popen(command_line, stdout=PIPE, stderr=STDOUT)
+            out, err = proc.communicate()
+            #~ print 'out=(%s), err=(%s)' % (out, err)
+            if "couldn't connect to host" in out:
+                err = out
+            return False if err else out
+
+        try:
+            f = open(inputfile, 'r')
+            filestr = f.read()
+            f.close()
+            return filestr
+
+        except IOError:
+            print 'Could not read file.', sys.exc_info()[1]
+            self._exit()
 
     def _get_mogrifyers(self):
         for mogrifyer in self.options.mogrifyers:
