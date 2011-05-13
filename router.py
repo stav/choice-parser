@@ -33,6 +33,7 @@ class Router(object):
         self.options   = None
         self.parser    = None
         self.filters   = []
+        self.mogrifyers= []
 
     # Public methods
     # ------------------------------------------------------------------
@@ -45,52 +46,59 @@ class Router(object):
         >>> r.options
         Namespace... qualify=True...
         """
-        parser = argparse.ArgumentParser(
+        # declare command-line argument parser
+        command_line = argparse.ArgumentParser(
             description='Parses and tokenizes text.',
             epilog='Refer to the documentation for more detailed information.',
             prog=sys.argv[0],
             )
 
-        parser.add_argument('-V', '--version', action='version',
+        # define the command-line arguments
+        command_line.add_argument('-V', '--version', action='version',
                             version='%(prog)s Router version ' + self.version,
                             help='print the version information and exit')
 
-        parser.add_argument('-v', '--verbose', action='store_true',
+        command_line.add_argument('-v', '--verbose', action='store_true',
                             help='verbose output including doc-testing')
 
-        parser.add_argument('-s', '--silent', action='store_true',
+        command_line.add_argument('-s', '--silent', action='store_true',
                             help='do not print out statistical information')
 
-        parser.add_argument('-q', '--qualify', action='store_true',
+        command_line.add_argument('-q', '--qualify', action='store_true',
                             help='Qualify the output with the question parts') # e.g. "stem = ...."
 
-        parser.add_argument('-i', dest='inputfile', type=str, metavar='INFL',
+        command_line.add_argument('-i', dest='inputfile', type=str, metavar='INFL',
                             help='input filename')
 
-        parser.add_argument('-o', dest='outputfile', type=str, metavar='OUFL',
+        command_line.add_argument('-o', dest='outputfile', type=str, metavar='OUFL',
                             help='output filename')
 
-        parser.add_argument('-p', dest='parser', type=str, metavar='PRSR',
+        command_line.add_argument('-m', dest='mogrifyers', type=str, metavar='MGRFs',
+                            help='mogrifyer classes "M1, M2,... Mn"')
+
+        command_line.add_argument('-p', dest='parser', type=str, metavar='PRSR',
                             help='parser class')
 
-        parser.add_argument('-f', dest='filters', type=str, metavar='FLTRs',
+        command_line.add_argument('-f', dest='filters', type=str, metavar='FLTRs',
                             help='filterer classes "F1, F2,... Fn"')
 
-        parser.add_argument('-w', dest='writer', type=str, metavar='WRTR',
+        command_line.add_argument('-w', dest='writer', type=str, metavar='WRTR',
                             help='writer class')
 
-        parser.add_argument('input', metavar='INPUT', type=str, nargs='?',
+        command_line.add_argument('input', metavar='INPUT', type=str, nargs='?',
                             help='input string')
 
-        #~ import pdb; pdb.set_trace()
-        self.options = parser.parse_args(options)
+        # load the commandline options
+        self.options = command_line.parse_args(options)
 
         # 'asdf , qwer' ==>> ['asdf', 'qwer']
-        self.options.filters = [f.strip() for f in self.options.filters.split(',')] if self.options.filters else []
+        self.options.filters    = [f.strip() for f in self.options.filters.split(',')   ] if self.options.filters    else []
+        self.options.mogrifyers = [m.strip() for m in self.options.mogrifyers.split(',')] if self.options.mogrifyers else []
 
     def load(self, options=sys.argv[1:]):
         """
-        The primary Router method to handle: setup, parsing and filtering.
+        The primary Router method to handle: setup, mogifying, parsing and 
+        filtering.
 
         >>> r = Router()
         >>> r.load(['-s', '''This is the stem
@@ -100,8 +108,11 @@ class Router(object):
         """
         #~ import pdb; pdb.set_trace()
         self.setup(options)
+        
+        mogrifyed_input = self.mogrify(self.get_input())
 
-        self.parse(self.get_input())
+        self.parse(mogrifyed_input)
+
         self.filter()
 
         if not self.options.silent:
@@ -123,8 +134,19 @@ class Router(object):
         self.load(options)
         self.write()
 
-    # Protected methods
-    # ------------------------------------------------------------------
+    def mogrify(self, string):
+        try:
+            self.mogrifyers = list(self._get_mogrifyers())
+
+        except AttributeError:
+            sys.stderr.write("Could not declare mogrifyers.")
+            print sys.exc_info()[1]
+            return
+
+        for mogrifyer in self.mogrifyers:
+            string = mogrifyer.mogrify(string)
+            
+        return string
 
     def parse(self, string):
         try:
@@ -214,6 +236,15 @@ class Router(object):
                 len(question.options),
                 's' if len(question.options) != 1 else ''
                 )
+
+    # Protected methods
+    # ------------------------------------------------------------------
+
+    def _get_mogrifyers(self):
+        for mogrifyer in self.options.mogrifyers:
+            Mogrifyer = self.__forname("mogrifyer", mogrifyer)
+            if Mogrifyer:
+                yield Mogrifyer()
 
     def _get_parser(self, string):
         parser = self.options.parser if self.options.parser else 'SingleParser'

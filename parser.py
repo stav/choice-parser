@@ -6,8 +6,8 @@ from question import Question
 ########################################################################
 class Parser(object):
     """
-    The parser looks through the tokens to determine what is the stem and
-    what are the options.
+    The parser breaks up a string into tokens and then looks through those 
+    tokens to determine what is the stem and what are the options.
     """
     def __init__(self):
         self.tokens  = []

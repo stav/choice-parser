@@ -40,6 +40,7 @@ This is the choice-parser Doctest documentation unit testing application.
 
 ########################################################################
 >>> r.load(['-i', 'input/choices',
+...         '-m', 'BooleanoptionMogrifyer',
 ...         '-p', 'IndexParser',
 ...         '-s',
 ...         ])
@@ -56,6 +57,7 @@ This is the choice-parser Doctest documentation unit testing application.
 """
 import doctest
 import router
+import mogrifyer
 import parser
 import filter
 import writer
@@ -87,6 +89,9 @@ if __name__ == '__main__':
 
     print '\nThe first thing we do is test that all the input files pass muster.'
     test()
+
+    print '\nThen we test the mogrifyer to see if it passes the test for robustness.'
+    test(mogrifyer)
 
     print '\nThen we test the parser to see if it passes the test for robustness.'
     test(parser)
