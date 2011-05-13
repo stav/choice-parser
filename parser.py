@@ -9,54 +9,34 @@ class Parser(object):
     The parser looks through the tokens to determine what is the stem and
     what are the options.
     """
-
-    # Constructor
-    # ------------------------------------------------------------------
-
-    def __init__(self, str):
-        self.str = str
+    def __init__(self):
         self.tokens  = []
-        self._tokenize()
 
-    # Public methods
-    # ------------------------------------------------------------------
-
-    def parse(self):
+    def _tokenize(self, string):
         """
-        Spins thru the tokens and creates a list of question objects for
-        each stem found, adds in the options and returns the whole list
-        to the router.
-        """
-        pass
+        Each Parser subclass in this module, by deafult, first splits up 
+        the input into tokens.  Then it spins thru the tokens and creates 
+        a list of question objects for each stem found, adds in the options 
+        and returns the whole list to the router.
 
-    # Protected methods
-    # ------------------------------------------------------------------
-
-    def _tokenize(self):
-        """
-        Each class in this parser module, by deafult, first splits up the 
-        intput into tokens.  
-        
         ..note: Currently the tokenizing is based on line-breaks.
         """
-        # Find prefix/suffix
-        #~ while True:
-            #~ match = re.match(r"^(\s*<[^>]+>\s*)", str)
-            #~ if match is None: break
-            #~ if self.prefix is None: self.prefix = ''
-            #~ self.prefix += match.group(0)
-            #~ str = str[len(match.group(0)):]
-        #~ while True:
-            #~ match = re.findall(r"(\s*<[^>]+>[\s\n\r]*)$", str)
-            #~ if not match: break
-            #~ if self.suffix is None: self.suffix = ''
-            #~ self.suffix = match[0] + self.suffix
-            #~ str = str[:-len(match[0])]
+        # combine stem spilt into lines into a single line:
+        #     1.
+        #     What is a disadvantage of multiple-choice questions?
+        #       A.     Time needed to score them
+        # becomes:
+        #     1. What is a disadvantage of multiple-choice questions?
+        #       A.     Time needed to score them
+        p = re.compile(r"(\s*[12]+\.\s*)$\s+(.*?)$(?=\s*[Aa]\.)", re.MULTILINE | re.DOTALL)
+        string = p.sub('\g<1>\g<2>', string)
 
-        # Split the input string by newlines
-        for token in re.split('(.*)', self.str):
+        # Split and strip the input string by newlines
+        for token in re.split('(.*)', string):
             if token.strip() != '':
                 self.tokens.append(token)
+                
+        return len(self.tokens)
 
 ########################################################################
 class SingleParser (Parser):
@@ -69,23 +49,16 @@ class SingleParser (Parser):
     ... This is the first option
     ... This is the second option
     ... '''
-    >>> p = SingleParser(i)
-    >>> q = p.parse()[0]
+    >>> p = SingleParser()
+    >>> q = p.parse(i)[0]
     >>> len(q.options)
     2
     """
+    def __init__(self):
+        super(SingleParser, self).__init__()
 
-    # Constructor
-    # ------------------------------------------------------------------
-
-    def __init__(self, str):
-        super(SingleParser, self).__init__(str)
-
-    # Public methods
-    # ------------------------------------------------------------------
-
-    def parse(self):
-        if len(self.tokens) == 0: return []
+    def parse(self, string):
+        if not self._tokenize(string): return []
 
         question = Question()
         question.stem = self.tokens[0]
@@ -103,23 +76,16 @@ class IndexParser (Parser):
     >>> from parser import IndexParser
     >>> r = Router()
     >>> i = r.get_input('input/anarchy')
-    >>> p = IndexParser(i)
-    >>> Q = p.parse()
+    >>> p = IndexParser()
+    >>> Q = p.parse(i)
     >>> len(Q)
     10
     """
+    def __init__(self):
+        super(IndexParser, self).__init__()
 
-    # Constructor
-    # ------------------------------------------------------------------
-
-    def __init__(self, str):
-        super(IndexParser, self).__init__(str)
-
-    # Public methods
-    # ------------------------------------------------------------------
-
-    def parse(self):
-        if len(self.tokens) == 0: return []
+    def parse(self, string):
+        if not self._tokenize(string): return []
 
         questions = []
         question = None
@@ -127,14 +93,15 @@ class IndexParser (Parser):
 
         for token in self.tokens:
             #~ print 'token: ', token
-            s = re.match(r"^\s*\d+\. ", token)
+            s = re.match(r"^\s*\d+\.\s", token)
             if s and s.group():
-                if question: questions.append(question)
+                if question and len(question.options) > 0: 
+                    questions.append(question)
                 question = Question()
                 question.stem = token
                 continue
 
-            o = re.match(r"^\s*[a-zA-Z]+[.)] ", token)
+            o = re.match(r"^\s*[a-zA-Z][.)]\s", token)
             if o and o.group():
                 try:
                     assert question is not None
@@ -143,7 +110,8 @@ class IndexParser (Parser):
                 except AssertionError:
                     pass
 
-        if question: questions.append(question)
+        if question and len(question.options) > 0: 
+            questions.append(question)
 
         return questions
 
@@ -157,23 +125,16 @@ class BlockParser (Parser):
     >>> from parser import BlockParser
     >>> r = Router()
     >>> i = r.get_input('input/drivers')
-    >>> p = BlockParser(i)
-    >>> Q = p.parse()
+    >>> p = BlockParser()
+    >>> Q = p.parse(i)
     >>> len(Q)
-    12
+    11
     """
+    def __init__(self):
+        super(BlockParser, self).__init__()
 
-    # Constructor
-    # ------------------------------------------------------------------
-
-    def __init__(self, str):
-        super(BlockParser, self).__init__(str)
-
-    # Public methods
-    # ------------------------------------------------------------------
-
-    def parse(self):
-        if len(self.tokens) == 0: return []
+    def parse(self, string):
+        if not self._tokenize(string): return []
 
         questions = []
         question = Question()
@@ -181,7 +142,7 @@ class BlockParser (Parser):
 
         for token in self.tokens:
             #~ print 'token: ', token
-            o = re.match(r"^\s*[a-zA-Z]+[.)] ", token)
+            o = re.match(r"^\s*[a-zA-Z][.)] ", token)
             if o and o.group():
                 option = True
                 try:
@@ -203,6 +164,7 @@ class BlockParser (Parser):
             except AssertionError:
                 pass
 
-        if question: questions.append(question)
+        if question and len(question.options) > 0: 
+            questions.append(question)
 
         return questions

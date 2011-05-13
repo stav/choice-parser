@@ -20,7 +20,7 @@ This is the choice-parser Doctest documentation unit testing application.
 ...         '-s',
 ...         ])
 >>> len(r.questions)
-12
+11
 
 ########################################################################
 >>> r.load(['-i', 'input/reading',
@@ -45,6 +45,14 @@ This is the choice-parser Doctest documentation unit testing application.
 ...         ])
 >>> len(r.questions)
 7
+
+########################################################################
+>>> r.load(['-i', 'input/teachers',
+...         '-p', 'IndexParser',
+...         '-s',
+...         ])
+>>> len(r.questions)
+14
 """
 import doctest
 import router

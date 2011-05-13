@@ -130,7 +130,7 @@ class Router(object):
         try:
             if string:
                 self.parser = self._get_parser(string)
-                self.questions = self.parser.parse()
+                self.questions = self.parser.parse(string)
 
         except AttributeError:
             sys.stderr.write("Could not parse input, bad parser selected.")
@@ -220,7 +220,7 @@ class Router(object):
         #~ Parser = type(parser, (), {})
         Parser = self.__forname("parser", parser)
         if Parser:
-            return Parser(string)
+            return Parser()
 
     def _get_filters(self):
         for filter in self.options.filters:
