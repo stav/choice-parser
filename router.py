@@ -4,6 +4,7 @@ import argparse
 
 from subprocess import Popen, PIPE, STDOUT
 from question import Question
+from question import Questions
 
 ########################################################################
 class Router(object):
@@ -26,13 +27,17 @@ class Router(object):
     # The list of questions
     questions = ''
 
+    # Property: qhash
+    # A numerical description of the parsed list of questions
+    qhash = {}
+
     # Constructor
     # ------------------------------------------------------------------
 
     def __init__(self):
         self.questions = ''
+        self.qhash     = {}
         self.options   = None
-        self.converter = None
         self.parser    = None
         self.mogrifyers= []
         self.filters   = []
@@ -75,9 +80,6 @@ class Router(object):
         command_line.add_argument('-o', dest='outputfile', type=str, metavar='OUFL',
                             help='output filename')
 
-        command_line.add_argument('-c', dest='converter', type=str, metavar='CVTR',
-                            help='converter class')
-
         command_line.add_argument('-m', dest='mogrifyers', type=str, metavar='MGRFs',
                             help='mogrifyer classes "M1, M2,... Mn"')
 
@@ -102,7 +104,7 @@ class Router(object):
 
     def load(self, options=sys.argv[1:]):
         """
-        The primary Router method to handle: setup, mogifying, parsing and 
+        The primary Router method to handle: setup, mogrifying, parsing and 
         filtering.
 
         >>> r = Router()
@@ -223,6 +225,7 @@ class Router(object):
     def show_stats(self):
         #~ import pdb; pdb.set_trace()
         print 'stats: self.options: ', repr(self.options)
+        print 'stats: qhash: ', self.qhash
         print 'stats: parser: %s' % self.parser
         print 'stats: filters: %s' % self.filters
         print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
@@ -238,14 +241,12 @@ class Router(object):
     # ------------------------------------------------------------------
 
     def _get_file_contents(self, inputfile):
-        if self.options and self.options.converter and self.options.converter.lower() == 'pdftotext':
+        if '.pdf' == inputfile[len(inputfile)-4:len(inputfile)]:
             command_line = ['pdftotext', '-raw', inputfile, '-']
             proc = Popen(command_line, stdout=PIPE, stderr=STDOUT)
             out, err = proc.communicate()
             #~ print 'out=(%s), err=(%s)' % (out, err)
-            if "couldn't connect to host" in out:
-                err = out
-            return False if err else out
+            return err if err else out
 
         try:
             f = open(inputfile, 'r')
@@ -264,11 +265,26 @@ class Router(object):
                 yield Mogrifyer()
 
     def _get_parser(self, string):
-        parser = self.options.parser if self.options.parser else 'SingleParser'
+        #parser = self.options.parser if self.options.parser else 'SingleParser'
+        if self.options.parser: 
+            return self.__forname("parser", self.options.parser)()
+
+        #~ import pdb; pdb.set_trace()
         #~ Parser = type(parser, (), {})
-        Parser = self.__forname("parser", parser)
-        if Parser:
-            return Parser()
+        for parserclass in ('SingleParser', 'IndexParser', 'BlockParser'):
+            Parser = self.__forname("parser", parserclass)
+            self.qhash[parserclass] = Questions(Parser().parse(string))
+
+        if   self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].symetrical:
+            parser = 'IndexParser'
+        elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].symetrical:
+            parser = 'BlockParser'
+        elif self.qhash['IndexParser'].length > 1:
+            parser = 'IndexParser'
+        else:
+            parser = 'SingleParser'
+            
+        return self.__forname("parser", parser)()
 
     def _get_filters(self):
         for filter in self.options.filters:

@@ -49,7 +49,6 @@ This is the choice-parser Doctest documentation unit testing application.
 
 ########################################################################
 >>> r.load(['-i', 'input/teachers.pdf',
-...         '-c', 'pdftotext',
 ...         '-p', 'IndexParser',
 ...         '-s',
 ...         ])

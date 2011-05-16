@@ -10,7 +10,7 @@ class Parser(object):
     tokens to determine what is the stem and what are the options.
     """
     def __init__(self):
-        self.tokens  = []
+        pass
 
     def _tokenize(self, string):
         """
@@ -21,6 +21,8 @@ class Parser(object):
 
         ..note: Currently the tokenizing is based on line-breaks.
         """
+        tokens = []
+
         # combine stem spilt into lines into a single line:
         #     1.
         #     What is a disadvantage of multiple-choice questions?
@@ -34,9 +36,9 @@ class Parser(object):
         # Split and strip the input string by newlines
         for token in re.split('(.*)', string):
             if token.strip() != '':
-                self.tokens.append(token)
+                tokens.append(token)
                 
-        return len(self.tokens)
+        return tokens
 
 ########################################################################
 class SingleParser (Parser):
@@ -58,11 +60,12 @@ class SingleParser (Parser):
         super(SingleParser, self).__init__()
 
     def parse(self, string):
-        if not self._tokenize(string): return []
+        tokens = self._tokenize(string)
+        if not tokens: return []
 
         question = Question()
-        question.stem = self.tokens[0]
-        question.options = self.tokens[1:] if len(self.tokens) > 1 else []
+        question.stem = tokens[0]
+        question.options = tokens[1:] if len(tokens) > 1 else []
 
         return [question]
 
@@ -85,13 +88,11 @@ class IndexParser (Parser):
         super(IndexParser, self).__init__()
 
     def parse(self, string):
-        if not self._tokenize(string): return []
-
         questions = []
         question = None
         #~ import pdb; pdb.set_trace()
 
-        for token in self.tokens:
+        for token in self._tokenize(string):
             #~ print 'token: ', token
             s = re.match(r"^\s*\d+\.\s", token)
             if s and s.group():
@@ -134,13 +135,11 @@ class BlockParser (Parser):
         super(BlockParser, self).__init__()
 
     def parse(self, string):
-        if not self._tokenize(string): return []
-
         questions = []
         question = Question()
         option = False
 
-        for token in self.tokens:
+        for token in self._tokenize(string):
             #~ print 'token: ', token
             o = re.match(r"^\s*[a-zA-Z][.)] ", token)
             if o and o.group():
