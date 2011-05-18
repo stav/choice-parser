@@ -1,112 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-This is the choice-parser Doctest documentation unit testing application.
 
->>> from router import Router
->>> r = Router()
+import unittest
+import unittest_data
+import unittest_doctest
 
-########################################################################
->>> r.load(['-i', 'input/anarchy',
-...         '-p', 'IndexParser',
-...         '-s',
-...         ])
->>> len(r.questions)
-10
+def main():
+    data_suite = unittest_data.suite()
+    doc_suite  = unittest_doctest.suite()
 
-########################################################################
->>> r.load(['-i', 'input/drivers',
-...         '-p', 'BlockParser',
-...         '-s',
-...         ])
->>> len(r.questions)
-11
+    full_suite = unittest.TestSuite()
+    full_suite.addTest(data_suite)
+    full_suite.addTest(doc_suite)
 
-########################################################################
->>> r.load(['-i', 'input/reading',
-...         '-p', 'IndexParser',
-...         '-s',
-...         ])
->>> len(r.questions)
-15
-
-########################################################################
->>> r.load(['-i', 'input/writing',
-...         '-p', 'IndexParser',
-...         '-s',
-...         ])
->>> len(r.questions)
-10
-
-########################################################################
->>> r.load(['-i', 'input/choices',
-...         '-m', 'BooleanoptionMogrifyer',
-...         '-p', 'IndexParser',
-...         '-s',
-...         ])
->>> len(r.questions)
-7
-
-########################################################################
->>> r.load(['-i', 'input/teachers.pdf',
-...         '-p', 'IndexParser',
-...         '-s',
-...         ])
->>> len(r.questions)
-14
-"""
-import doctest
-import router
-import mogrifyer
-import parser
-import filter
-import writer
-
-passed = failed = 0
-
-def test(module = None):
-    global passed, failed
-    flags = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
-    
-    if module:
-        print module
-        results = doctest.testmod(module, optionflags = flags)
-
-    else:
-        results = doctest.testmod(optionflags = flags)
-
-    if results.attempted == 0:
-        print "No tests were attempted:",
-    elif results.failed == 0:
-        print "Test passed.",
-
-    print results
-    
-    passed += results.attempted - results.failed
-    failed += results.failed
+    unittest.TextTestRunner(verbosity=2).run(full_suite)
 
 if __name__ == '__main__':
-
-    print '\nThe first thing we do is test that all the input files pass muster.'
-    test()
-
-    print '\nThen we test the mogrifyer to see if it passes the test for robustness.'
-    test(mogrifyer)
-
-    print '\nThen we test the parser to see if it passes the test for robustness.'
-    test(parser)
-
-    print '\nThen we test the filter to see if it passes the test for robustness.'
-    test(filter)
-
-    print '\nThen we test the writer to see if it passes the test for robustness.'
-    test(writer)
-
-    print '\nThen we test the router to see if it passes the test for robustness.'
-    test(router)
-
-    if failed:
-        print failed, 'test%s failed.' % ('s' if failed !=1 else '')
-    else:
-        if passed > 0:
-            print 'All tests passed'
+    main()

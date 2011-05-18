@@ -265,7 +265,6 @@ class Router(object):
                 yield Mogrifyer()
 
     def _get_parser(self, string):
-        #parser = self.options.parser if self.options.parser else 'SingleParser'
         if self.options.parser: 
             return self.__forname("parser", self.options.parser)()
 
