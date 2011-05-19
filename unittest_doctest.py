@@ -31,11 +31,6 @@ class TestChoiceDoctest(unittest.TestCase):
     def test_writer(self):
         self.doctest(writer)
 
-    def suite():
-       suite = unittest.TestSuite()
-       suite.addTest(unittest.makeSuite(TestSort))
-       return suite
-
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestChoiceDoctest))

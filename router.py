@@ -10,6 +10,20 @@ from question import Questions
 class Router(object):
     """
     The router collects all the input data and prepares it for parsing.
+    
+    Method map::
+    
+        start()
+
+            load()
+                setup()
+                get_input()
+                mogrify()
+                parse()
+                filter()
+                show-stats()
+
+            write()
     """
 
     # Properties
@@ -113,7 +127,6 @@ class Router(object):
         >>> len(r.questions)
         1
         """
-        #~ import pdb; pdb.set_trace()
         self.setup(options)
         
         mogrifyed_input = self.mogrify(self.get_input())
@@ -142,11 +155,29 @@ class Router(object):
         self.write()
 
     def mogrify(self, string):
+        """
+        Load all mogrifiers specified on the command-line and apply them
+        one at a time to the input string returning the mogrified string.
+        A mogrifier takes an input string and applies some search and replace
+        logic usually to massage the string into a different format: removing
+        all non-printable characters, for example.
+        
+        @param  string  string  The input string to mogrify
+        @return  string  The mogrified string
+        
+        >>> from mogrifyer import BooleanoptionMogrifyer
+        >>> r = Router()
+        >>> r.setup(['-m', 'BooleanoptionMogrifyer'])
+        >>> print r.mogrify('''This is the stem
+        ... yes no a. This is an option''')
+        This is the stem
+        a. This is an option
+        """
         try:
             self.mogrifyers = list(self._get_mogrifyers())
 
         except AttributeError:
-            sys.stderr.write("Could not declare mogrifyers.")
+            sys.stderr.write("Could not declare mogrifyers. ")
             print sys.exc_info()[1]
             return
 
@@ -156,17 +187,45 @@ class Router(object):
         return string
 
     def parse(self, string):
+        """
+        The parsing is the heart of the router and here we run the protected
+        method _get_parser() to determine the best parser to, instantiate
+        and object instance for us which we run the parse() method on to 
+        retrieve our question list which we load into ourself.
+
+        @param  string  string  The mogrified input string
+        
+        >>> r = Router()
+        >>> r.setup([])
+        >>> r.parse('''This is the stem
+        ... This is an option''')
+        >>> assert len(r.questions) == 1
+        >>> print r.questions[0].stem
+        This is the stem
+        """
         try:
             if string:
                 self.parser = self._get_parser(string)
                 self.questions = self.parser.parse(string)
 
         except AttributeError:
-            sys.stderr.write("Could not parse input, bad parser selected.")
+            sys.stderr.write("Could not parse input, bad parser selected. ")
             print sys.exc_info()[1]
-            return
 
     def filter(self):
+        """
+        Load all filters specified on the command-line and apply them
+        one at a time to the parsed question list.
+
+        >>> r = Router()
+        >>> r.setup(['-f', 'IndexFilter'])
+        >>> r.parse('1. This is the stem')
+        >>> print r.questions[0].stem
+        1. This is the stem
+        >>> r.filter()
+        >>> print r.questions[0].stem
+         This is the stem
+        """
         try:
             self.filters = list(self._get_filters())
 
@@ -180,7 +239,7 @@ class Router(object):
 
     def write(self):
         try:
-            self.writer = self._get_writer()
+            writer = self._get_writer()
 
         except AttributeError:
             sys.stderr.write("Could not declare writer.")
@@ -189,7 +248,7 @@ class Router(object):
 
         if self.options.outputfile:
             try:
-                output = open(self.options.outputfile + self.writer.extension, 'wb')
+                output = open(self.options.outputfile + writer.extension, 'wb')
 
             except:
                 sys.stderr.write("Could not open output file for writing.")
@@ -199,14 +258,27 @@ class Router(object):
         else:
             output = sys.stdout
 
-        self.writer.write(output, self.questions)
+        writer.write(output, self.questions)
 
         if self.options.outputfile:
             output.close()
 
     def get_input(self, inputfile=None):
-        #~ import pdb; pdb.set_trace()
-
+        """
+        Return the input from the command-line. If an inputfile is designated
+        then return that file's contents.  Otherwise, if no input is specified
+        then read from standard input.
+        
+        @param  inputfile  string  The filename of the input file to read
+        @return  string  The input
+        
+        >>> r = Router()
+        >>> r.setup(['''This is the stem
+        ... This is an option'''])
+        >>> print r.get_input()
+        This is the stem
+        This is an option
+        """
         inputfile = self.options.inputfile if not inputfile else inputfile
         if inputfile:
             # note: any command line input is ignored
@@ -223,7 +295,9 @@ class Router(object):
             pass
 
     def show_stats(self):
-        #~ import pdb; pdb.set_trace()
+        """
+        Display internal statistics.  Silenced with the -s switch.
+        """
         print 'stats: self.options: ', repr(self.options)
         print 'stats: qhash: ', self.qhash
         print 'stats: parser: %s' % self.parser
@@ -264,16 +338,34 @@ class Router(object):
             if Mogrifyer:
                 yield Mogrifyer()
 
-    def _get_parser(self, string):
+    def _get_parser(self, string=''):
+        """
+        This tries to use some rudimentary intelligence to determine which
+        parser to choose based on how many questsions it parses out giving
+        extra weight to a uniform distribution of options.
+        
+        @param  string  string  The input string for the parsers to parse
+        @return  parser.Parser  The selected parser instantiation
+
+        >>> r = Router()
+        >>> r.setup(['-p', 'IndexParser'])
+        >>> r._get_parser()
+        <parser.IndexParser object at...
+        """
         if self.options.parser: 
             return self.__forname("parser", self.options.parser)()
 
-        #~ import pdb; pdb.set_trace()
-        #~ Parser = type(parser, (), {})
+        # run all the parsers for the input string and load the results 
+        # into a hash.
         for parserclass in ('SingleParser', 'IndexParser', 'BlockParser'):
             Parser = self.__forname("parser", parserclass)
             self.qhash[parserclass] = Questions(Parser().parse(string))
 
+        # now look at the parser results to determine which one to use.
+        # we first look for a symetrical IndexParser otherwise we look
+        # for a symetrical BlockParser and then we look to see if the
+        # IndexParser at least has any found any questions and finally
+        # we default to a SingleParser otherwise.
         if   self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].symetrical:
             parser = 'IndexParser'
         elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].symetrical:

@@ -10,8 +10,8 @@ def main():
     doc_suite  = unittest_doctest.suite()
 
     full_suite = unittest.TestSuite()
-    full_suite.addTest(data_suite)
-    full_suite.addTest(doc_suite)
+    full_suite . addTest(data_suite)
+    full_suite . addTest(doc_suite)
 
     unittest.TextTestRunner(verbosity=2).run(full_suite)
 

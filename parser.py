@@ -90,10 +90,8 @@ class IndexParser (Parser):
     def parse(self, string):
         questions = []
         question = None
-        #~ import pdb; pdb.set_trace()
 
         for token in self._tokenize(string):
-            #~ print 'token: ', token
             s = re.match(r"^\s*\d+\.\s", token)
             if s and s.group():
                 if question and len(question.options) > 0: 
