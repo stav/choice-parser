@@ -67,10 +67,10 @@ class WhitespaceFilter (object):
 
         for question in questions:
             q = Question()
-            q.stem = question.stem.strip()
+            q.stem = re.sub(r"\s+", ' ', question.stem).strip()
 
             for option in question.options:
-                q.options.append(option.strip())
+                q.options.append(re.sub(r"\s+", ' ', option).strip())
 
             filtered_questions.append(q)
 

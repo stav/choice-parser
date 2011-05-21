@@ -300,6 +300,7 @@ class Router(object):
         """
         print 'stats: self.options: ', repr(self.options)
         print 'stats: qhash: ', self.qhash
+        print 'stats: mogrifyers: %s' % self.mogrifyers
         print 'stats: parser: %s' % self.parser
         print 'stats: filters: %s' % self.filters
         print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
@@ -337,6 +338,10 @@ class Router(object):
             Mogrifyer = self.__forname("mogrifyer", mogrifyer)
             if Mogrifyer:
                 yield Mogrifyer()
+                
+        Mogrifyer = self.__forname("mogrifyer", 'SplitstemMogrifyer')
+        if Mogrifyer:
+            yield Mogrifyer()
 
     def _get_parser(self, string=''):
         """
@@ -357,7 +362,7 @@ class Router(object):
 
         # run all the parsers for the input string and load the results 
         # into a hash.
-        for parserclass in ('SingleParser', 'IndexParser', 'BlockParser'):
+        for parserclass in ('SingleParser', 'IndexParser', 'BlockParser', 'ChunkParser'):
             Parser = self.__forname("parser", parserclass)
             self.qhash[parserclass] = Questions(Parser().parse(string))
 

@@ -14,31 +14,32 @@ class Parser(object):
 
     def _tokenize(self, string):
         """
-        Each Parser subclass in this module, by deafult, first splits up 
-        the input into tokens.  Then it spins thru the tokens and creates 
-        a list of question objects for each stem found, adds in the options 
-        and returns the whole list to the router.
-
-        ..note: Currently the tokenizing is based on line-breaks.
+        Split input string into tokens based on line-breaks.
+        
+        @param  string  The input string
+        @return  list  The tokenized input
         """
         tokens = []
-
-        # combine stem spilt into lines into a single line:
-        #     1.
-        #     What is a disadvantage of multiple-choice questions?
-        #       A.     Time needed to score them
-        # becomes:
-        #     1. What is a disadvantage of multiple-choice questions?
-        #       A.     Time needed to score them
-        p = re.compile(r"(\s*[12]+\.\s*)$\s+(.*?)$(?=\s*[Aa]\.)", re.MULTILINE | re.DOTALL)
-        string = p.sub('\g<1>\g<2>', string)
 
         # Split and strip the input string by newlines
         for token in re.split('(.*)', string):
             if token.strip() != '':
                 tokens.append(token)
-                
+
         return tokens
+
+    def _chunk(self, string):
+        """
+        Split input string into tokens based on option groups.  In other
+        words we look for a group of lines that start with A, B, C and 
+        maybe D and then assume the stem is the bit before each.
+        
+        @param  string  The input string
+        @return  list  The tokenized input
+        """
+        #                    A .          $   B .          $   C .          $      D .          $
+        p = re.compile(r"(\s*A\.\s+[^\n]+\n\s*B\.\s+[^\n]+\n\s*C\.\s+[^\n]+\n\s*(?:D\.\s+[^\n]+\n\s*)?)")
+        return p.split(string)
 
 ########################################################################
 class SingleParser (Parser):
@@ -138,7 +139,6 @@ class BlockParser (Parser):
         option = False
 
         for token in self._tokenize(string):
-            #~ print 'token: ', token
             o = re.match(r"^\s*[a-zA-Z][.)] ", token)
             if o and o.group():
                 option = True
@@ -163,5 +163,30 @@ class BlockParser (Parser):
 
         if question and len(question.options) > 0: 
             questions.append(question)
+
+        return questions
+
+########################################################################
+class ChunkParser (Parser):
+    def __init__(self):
+        super(ChunkParser, self).__init__()
+
+    def parse(self, string):
+        questions = []
+        question = None
+        chunks = self._chunk(string)
+
+        #import pdb; pdb.set_trace()
+        # spin thru the input chunks two at a time, the first being the
+        # stem, presumably, and the second being the option group
+        for index in range(0, len(chunks), 2):
+            question = Question()
+            question.stem = chunks[index]
+
+            if index+1 < len(chunks):
+                for option in [m.strip() for m in re.split(r"(\s*[A-D]\.\s+[^\n]+\s*)", chunks[index+1]) if m]:
+                    question.options.append(option)
+
+                questions.append(question)
 
         return questions
