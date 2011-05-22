@@ -6,7 +6,7 @@ from question import Question
 ########################################################################
 class Parser(object):
     """
-    The parser breaks up a string into tokens and then looks through those 
+    The parser breaks up a string into tokens and then looks through those
     tokens to determine what is the stem and what are the options.
     """
     def __init__(self):
@@ -15,7 +15,7 @@ class Parser(object):
     def _tokenize(self, string):
         """
         Split input string into tokens based on line-breaks.
-        
+
         @param  string  The input string
         @return  list  The tokenized input
         """
@@ -31,21 +31,29 @@ class Parser(object):
     def _chunk(self, string):
         """
         Split input string into tokens based on option groups.  In other
-        words we look for a group of lines that start with A, B, C and 
+        words we look for a group of lines that start with A, B, C and
         maybe D and then assume the stem is the bit before each.
-        
+
         @param  string  The input string
         @return  list  The tokenized input
         """
-        #                    A .          $   B .          $   C .          $      D .          $
-        p = re.compile(r"(\s*A\.\s+[^\n]+\n\s*B\.\s+[^\n]+\n\s*C\.\s+[^\n]+\n\s*(?:D\.\s+[^\n]+\n\s*)?)")
+        a = '(?:A\.|\(A\))'
+        b = '(?:B\.|\(B\))'
+        c = '(?:C\.|\(C\))'
+        d = '(?:D\.|\(D\))'
+        l = '[^\n\r]+\n\s*'
+        s = '\s+'
+        #              A.          B.          C.             D.
+        regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})?)".format(a=a, b=b, c=c, d=d, line=l, s=s)
+        p = re.compile(regex, re.IGNORECASE)
+
         return p.split(string)
 
 ########################################################################
 class SingleParser (Parser):
     """
-    The single parser assumes only one question and takes the first line
-    to be the stem and the rest of the lines are the options.
+    The single parser assumes only one question and takes the first token
+    to be the stem and the rest of the tokens are the options.
 
     >>> from parser import SingleParser
     >>> i = '''This is the stem
@@ -77,7 +85,6 @@ class IndexParser (Parser):
     options to be prefixed with letters.
 
     >>> from router import Router
-    >>> from parser import IndexParser
     >>> r = Router()
     >>> i = r.get_input('input/anarchy')
     >>> p = IndexParser()
@@ -89,13 +96,19 @@ class IndexParser (Parser):
         super(IndexParser, self).__init__()
 
     def parse(self, string):
+        """
+        Spin thru the tokens and create a list of Questions.
+
+        @param  string  The input string to parse
+        @return  list  The parsed Question objects
+        """
         questions = []
         question = None
 
         for token in self._tokenize(string):
             s = re.match(r"^\s*\d+\.\s", token)
             if s and s.group():
-                if question and len(question.options) > 0: 
+                if question and len(question.options) > 0:
                     questions.append(question)
                 question = Question()
                 question.stem = token
@@ -110,7 +123,7 @@ class IndexParser (Parser):
                 except AssertionError:
                     pass
 
-        if question and len(question.options) > 0: 
+        if question and len(question.options) > 0:
             questions.append(question)
 
         return questions
@@ -122,7 +135,6 @@ class BlockParser (Parser):
     options.
 
     >>> from router import Router
-    >>> from parser import BlockParser
     >>> r = Router()
     >>> i = r.get_input('input/drivers')
     >>> p = BlockParser()
@@ -134,6 +146,12 @@ class BlockParser (Parser):
         super(BlockParser, self).__init__()
 
     def parse(self, string):
+        """
+        Spin thru the tokens and create a list of Questions.
+
+        @param  string  The input string to parse
+        @return  list  The parsed Question objects
+        """
         questions = []
         question = Question()
         option = False
@@ -161,32 +179,67 @@ class BlockParser (Parser):
             except AssertionError:
                 pass
 
-        if question and len(question.options) > 0: 
+        if question and len(question.options) > 0:
             questions.append(question)
 
         return questions
 
 ########################################################################
 class ChunkParser (Parser):
+    """
+    The chunnk parser does not tokenize by lines but instead by groups of
+    lines separated by the option list; therefore, every other entry in
+    the split list consists of, theoretically, the stem followed by the
+    option list in the following entry which then is split line by line
+    for the individual options.
+
+    >>> from router import Router
+    >>> r = Router()
+    >>> i = '''3. What is the name of the part that contains the question?
+    ... A.     Multiple
+    ... B.     Choice
+    ... C.     Problem
+    ... D.     Stem
+    ... '''
+    >>> p = ChunkParser()
+    >>> Q = p.parse(i)
+    >>> len(Q)
+    1
+    >>> len(Q[0].options)
+    4
+    """
     def __init__(self):
         super(ChunkParser, self).__init__()
 
     def parse(self, string):
+        """
+        Spin thru the chunks and create a list of Questions.
+
+        @param  string  The input string to parse
+        @return  list  The parsed Question objects
+        """
         questions = []
-        question = None
+        question  = None
+        re_index  = r'(?:[A-Za-z]\.|\([A-Za-z]\))'
+        re_body   = r'[^\n]+'
+        re_option = r'(\s*{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
         chunks = self._chunk(string)
 
-        #import pdb; pdb.set_trace()
         # spin thru the input chunks two at a time, the first being the
         # stem, presumably, and the second being the option group
-        for index in range(0, len(chunks), 2):
+        for st_index in range(0, len(chunks), 2):
+            op_index = st_index +1
             question = Question()
-            question.stem = chunks[index]
+            stem = re.search(r"\n*(.*)$", chunks[st_index])
+            if stem:
+                question.stem = stem.group().strip()
 
-            if index+1 < len(chunks):
-                for option in [m.strip() for m in re.split(r"(\s*[A-D]\.\s+[^\n]+\s*)", chunks[index+1]) if m]:
-                    question.options.append(option)
+                if op_index < len(chunks):
+                    options = [o.strip() for o in re.split(re_option, chunks[op_index]) if o]
+                    #import pdb; pdb.set_trace()
+                    for option in options:
+                        question.options.append(option)
 
-                questions.append(question)
+                    questions.append(question)
 
         return questions

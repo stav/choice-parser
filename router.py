@@ -10,9 +10,9 @@ from question import Questions
 class Router(object):
     """
     The router collects all the input data and prepares it for parsing.
-    
+
     Method map::
-    
+
         start()
 
             load()
@@ -31,7 +31,11 @@ class Router(object):
 
     # Property: version
     # Router version
-    version = "0.1"
+    version = '0.1'
+
+    # Property: develenv
+    # Development enviroment
+    develenv = 'Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24) [GCC 4.5.2] on linux2'
 
     # Property: options
     # Command line arguments
@@ -76,7 +80,7 @@ class Router(object):
 
         # define the command-line arguments
         command_line.add_argument('-V', '--version', action='version',
-                            version='%(prog)s Router version ' + self.version,
+                            version='%(prog)s Router version ' + self.version + ' developed with ' + self.develenv,
                             help='print the version information and exit')
 
         command_line.add_argument('-v', '--verbose', action='store_true',
@@ -118,7 +122,7 @@ class Router(object):
 
     def load(self, options=sys.argv[1:]):
         """
-        The primary Router method to handle: setup, mogrifying, parsing and 
+        The primary Router method to handle: setup, mogrifying, parsing and
         filtering.
 
         >>> r = Router()
@@ -128,7 +132,7 @@ class Router(object):
         1
         """
         self.setup(options)
-        
+
         mogrifyed_input = self.mogrify(self.get_input())
 
         self.parse(mogrifyed_input)
@@ -161,10 +165,10 @@ class Router(object):
         A mogrifier takes an input string and applies some search and replace
         logic usually to massage the string into a different format: removing
         all non-printable characters, for example.
-        
+
         @param  string  string  The input string to mogrify
         @return  string  The mogrified string
-        
+
         >>> from mogrifyer import BooleanoptionMogrifyer
         >>> r = Router()
         >>> r.setup(['-m', 'BooleanoptionMogrifyer'])
@@ -183,18 +187,18 @@ class Router(object):
 
         for mogrifyer in self.mogrifyers:
             string = mogrifyer.mogrify(string)
-            
+
         return string
 
     def parse(self, string):
         """
         The parsing is the heart of the router and here we run the protected
         method _get_parser() to determine the best parser to, instantiate
-        and object instance for us which we run the parse() method on to 
+        and object instance for us which we run the parse() method on to
         retrieve our question list which we load into ourself.
 
         @param  string  string  The mogrified input string
-        
+
         >>> r = Router()
         >>> r.setup([])
         >>> r.parse('''This is the stem
@@ -268,10 +272,10 @@ class Router(object):
         Return the input from the command-line. If an inputfile is designated
         then return that file's contents.  Otherwise, if no input is specified
         then read from standard input.
-        
+
         @param  inputfile  string  The filename of the input file to read
         @return  string  The input
-        
+
         >>> r = Router()
         >>> r.setup(['''This is the stem
         ... This is an option'''])
@@ -338,7 +342,7 @@ class Router(object):
             Mogrifyer = self.__forname("mogrifyer", mogrifyer)
             if Mogrifyer:
                 yield Mogrifyer()
-                
+
         Mogrifyer = self.__forname("mogrifyer", 'SplitstemMogrifyer')
         if Mogrifyer:
             yield Mogrifyer()
@@ -348,7 +352,7 @@ class Router(object):
         This tries to use some rudimentary intelligence to determine which
         parser to choose based on how many questsions it parses out giving
         extra weight to a uniform distribution of options.
-        
+
         @param  string  string  The input string for the parsers to parse
         @return  parser.Parser  The selected parser instantiation
 
@@ -357,10 +361,10 @@ class Router(object):
         >>> r._get_parser()
         <parser.IndexParser object at...
         """
-        if self.options.parser: 
+        if self.options.parser:
             return self.__forname("parser", self.options.parser)()
 
-        # run all the parsers for the input string and load the results 
+        # run all the parsers for the input string and load the results
         # into a hash.
         for parserclass in ('SingleParser', 'IndexParser', 'BlockParser', 'ChunkParser'):
             Parser = self.__forname("parser", parserclass)
@@ -373,13 +377,15 @@ class Router(object):
         # we default to a SingleParser otherwise.
         if   self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].symetrical:
             parser = 'IndexParser'
+        elif self.qhash['ChunkParser'].length > 1 and self.qhash['ChunkParser'].symetrical:
+            parser = 'ChunkParser'
         elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].symetrical:
             parser = 'BlockParser'
         elif self.qhash['IndexParser'].length > 1:
             parser = 'IndexParser'
         else:
             parser = 'SingleParser'
-            
+
         return self.__forname("parser", parser)()
 
     def _get_filters(self):
