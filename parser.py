@@ -89,9 +89,9 @@ class IndexParser (Parser):
 
     >>> from router import Router
     >>> r = Router()
-    >>> i = r.get_input('input/anarchy')
-    >>> p = IndexParser()
-    >>> Q = p.parse(i)
+    >>> r.setup(['-i', 'input/anarchy'])
+    >>> i = r.get_input()
+    >>> Q = IndexParser().parse(i)
     >>> len(Q)
     10
     """
@@ -139,9 +139,9 @@ class BlockParser (Parser):
 
     >>> from router import Router
     >>> r = Router()
-    >>> i = r.get_input('input/drivers')
-    >>> p = BlockParser()
-    >>> Q = p.parse(i)
+    >>> r.setup(['-i', 'input/drivers'])
+    >>> i = r.get_input()
+    >>> Q = BlockParser().parse(i)
     >>> len(Q)
     11
     """

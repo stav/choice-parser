@@ -92,11 +92,13 @@ class Router(object):
         command_line.add_argument('-q', '--qualify', action='store_true',
                             help='Qualify the output with the question parts') # e.g. "stem = ...."
 
-        command_line.add_argument('-i', dest='inputfile', type=str, metavar='INFL',
-                            help='input filename')
+        command_line.add_argument('-i', dest='inputfile', nargs='?', metavar='INFL',
+                            type=argparse.FileType('r'), default=sys.stdin,
+                            help='input filename, def=stdin')
 
-        command_line.add_argument('-o', dest='outputfile', type=str, metavar='OUFL',
-                            help='output filename')
+        command_line.add_argument('-o', dest='outputfile', metavar='OUFL', nargs='?',
+                            type=argparse.FileType('w'), default=sys.stdout, const='/dev/null',
+                            help='output filename, def=stdout, const=/dev/null')
 
         command_line.add_argument('-m', dest='mogrifyers', type=str, metavar='MGRFs',
                             help='mogrifyer classes "M1, M2,... Mn"')
@@ -133,9 +135,7 @@ class Router(object):
         """
         self.setup(options)
 
-        mogrifyed_input = self.mogrify(self.get_input())
-
-        self.parse(mogrifyed_input)
+        self.parse (self.mogrify (self.get_input ()))
 
         self.filter()
 
@@ -177,13 +177,7 @@ class Router(object):
         This is the stem
         a. This is an option
         """
-        try:
-            self.mogrifyers = list(self._get_mogrifyers())
-
-        except AttributeError:
-            sys.stderr.write("Could not declare mogrifyers. ")
-            print sys.exc_info()[1]
-            return
+        self.mogrifyers = list(self._get_mogrifyers())
 
         for mogrifyer in self.mogrifyers:
             string = mogrifyer.mogrify(string)
@@ -213,7 +207,7 @@ class Router(object):
                 self.questions = self.parser.parse(string)
 
         except AttributeError:
-            sys.stderr.write("Could not parse input, bad parser selected. ")
+            sys.stderr.write("Could not parse input. ")
             print sys.exc_info()[1]
 
     def filter(self):
@@ -230,13 +224,7 @@ class Router(object):
         >>> print r.questions[0].stem
          This is the stem
         """
-        try:
-            self.filters = list(self._get_filters())
-
-        except AttributeError:
-            sys.stderr.write("Could not declare filters.")
-            print sys.exc_info()[1]
-            return
+        self.filters = list(self._get_filters())
 
         for filter in self.filters:
             self.questions = filter.filter(self.questions)
@@ -250,22 +238,9 @@ class Router(object):
             print sys.exc_info()[1]
             return
 
-        if self.options.outputfile:
-            try:
-                output = open(self.options.outputfile + writer.extension, 'wb')
+        writer.write(self.options.outputfile, self.questions)
 
-            except:
-                sys.stderr.write("Could not open output file for writing.")
-                print sys.exc_info()[1]
-                return
-
-        else:
-            output = sys.stdout
-
-        writer.write(output, self.questions)
-
-        if self.options.outputfile:
-            output.close()
+        #self.options.outputfile.close() # only close if not stdout
 
     def get_input(self, inputfile=None):
         """
@@ -273,7 +248,7 @@ class Router(object):
         then return that file's contents.  Otherwise, if no input is specified
         then read from standard input.
 
-        @param  inputfile  string  The filename of the input file to read
+        @param  inputfile  File  The open input file object
         @return  string  The input
 
         >>> r = Router()
@@ -283,20 +258,13 @@ class Router(object):
         This is the stem
         This is an option
         """
-        inputfile = self.options.inputfile if not inputfile else inputfile
-        if inputfile:
-            # note: any command line input is ignored
-            return self._get_file_contents(inputfile)
-
-        if self.options.input:
+        if self.options and self.options.input:
+            # note: any file input is ignored
             return self.options.input
 
-        try:
-            print 'Enter input text (ctrl-D to end)'
-            return sys.stdin.read()
+        inputfile = self.options.inputfile if not inputfile else inputfile
 
-        except KeyboardInterrupt:
-            pass
+        return self._read(inputfile)
 
     def show_stats(self):
         """
@@ -319,33 +287,28 @@ class Router(object):
     # Protected methods
     # ------------------------------------------------------------------
 
-    def _get_file_contents(self, inputfile):
-        if '.pdf' == inputfile[len(inputfile)-4:len(inputfile)]:
-            command_line = ['pdftotext', '-raw', inputfile, '-']
+    def _read(self, inputfile):
+        """
+        A wrapper for inputfile.read() to trap for the PDF conversion
+        """
+        if '.pdf' == inputfile.name[len(inputfile.name)-4:len(inputfile.name)]:
+            command_line = ['pdftotext', '-raw', inputfile.name, '-']
             proc = Popen(command_line, stdout=PIPE, stderr=STDOUT)
             out, err = proc.communicate()
-            #~ print 'out=(%s), err=(%s)' % (out, err)
             return err if err else out
 
-        try:
-            f = open(inputfile, 'r')
-            filestr = f.read()
-            f.close()
-            return filestr
-
-        except IOError:
-            print 'Could not read file.', sys.exc_info()[1]
-            self._exit()
+        return inputfile.read()
 
     def _get_mogrifyers(self):
         for mogrifyer in self.options.mogrifyers:
-            Mogrifyer = self.__forname("mogrifyer", mogrifyer)
-            if Mogrifyer:
+            try:
+                Mogrifyer = self.__forname("mogrifyer", mogrifyer)
+            except AttributeError:
+                print 'mogrifyer', sys.exc_info()[1]
+            else:
                 yield Mogrifyer()
 
-        Mogrifyer = self.__forname("mogrifyer", 'SplitstemMogrifyer')
-        if Mogrifyer:
-            yield Mogrifyer()
+        yield self.__forname("mogrifyer", 'SplitstemMogrifyer')()
 
     def _get_parser(self, string=''):
         """
@@ -366,7 +329,7 @@ class Router(object):
 
         # run all the parsers for the input string and load the results
         # into a hash.
-        for parserclass in ('SingleParser', 'IndexParser', 'BlockParser', 'ChunkParser'):
+        for parserclass in ('IndexParser', 'BlockParser', 'ChunkParser'):
             Parser = self.__forname("parser", parserclass)
             self.qhash[parserclass] = Questions(Parser().parse(string))
 
@@ -392,15 +355,16 @@ class Router(object):
 
     def _get_filters(self):
         for filter in self.options.filters:
-            Filter = self.__forname("filter", filter)
-            if Filter:
+            try:
+                Filter = self.__forname("filter", filter)
+            except AttributeError:
+                print 'filter', sys.exc_info()[1]
+            else:
                 yield Filter()
 
         # -q command line switch is a shortcut for the QualifiedFilter filter
         if self.options.qualify:
-            Filter = self.__forname("filter", 'QualifiedFilter')
-            if Filter:
-                yield Filter()
+            yield self.__forname("filter", 'QualifiedFilter')()
 
     def _get_writer(self):
         writer = self.options.writer if self.options.writer else 'TextWriter'
@@ -427,4 +391,4 @@ class Router(object):
             return classobj
 
         except AttributeError:
-            print modname, sys.exc_info()[1]
+            raise

@@ -71,6 +71,8 @@ class Questions(object):
         return option_count
 
     def __is_ordered(self, questions):
+        if len(questions) <2: return False
+
         for i in range(0, len(questions)):
             index_match = re.search(r'^\s*([0-9]+)', questions[i].stem)
             if not index_match: return False
