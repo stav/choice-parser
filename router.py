@@ -371,18 +371,20 @@ class Router(object):
             self.qhash[parserclass] = Questions(Parser().parse(string))
 
         # now look at the parser results to determine which one to use.
-        # we first look for a symetrical IndexParser otherwise we look
-        # for a symetrical BlockParser and then we look to see if the
-        # IndexParser at least has any found any questions and finally
-        # we default to a SingleParser otherwise.
-        if   self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].symetrical:
-            parser = 'IndexParser'
-        elif self.qhash['ChunkParser'].length > 1 and self.qhash['ChunkParser'].symetrical:
-            parser = 'ChunkParser'
-        elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].symetrical:
-            parser = 'BlockParser'
-        elif self.qhash['IndexParser'].length > 1:
-            parser = 'IndexParser'
+        # we first look for an ordered IndexParser and then for an ordered
+        # ChunkParser otherwise we look for a symetrical IndexParser and
+        # then a symetrical IndexParser and so on.
+        if   False: parser = ''
+        elif self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].ordered: parser = 'IndexParser'
+        elif self.qhash['ChunkParser'].length > 1 and self.qhash['ChunkParser'].ordered: parser = 'ChunkParser'
+        elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].ordered: parser = 'BlockParser'
+
+        elif self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].symetrical: parser = 'IndexParser'
+        elif self.qhash['ChunkParser'].length > 1 and self.qhash['ChunkParser'].symetrical: parser = 'ChunkParser'
+        elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].symetrical: parser = 'BlockParser'
+
+        elif self.qhash['IndexParser'].length > 1: parser = 'IndexParser'
+        elif self.qhash['ChunkParser'].length > 1: parser = 'ChunkParser'
         else:
             parser = 'SingleParser'
 

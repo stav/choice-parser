@@ -37,14 +37,17 @@ class Parser(object):
         @param  string  The input string
         @return  list  The tokenized input
         """
-        a = '(?:A\.|\(A\))'
-        b = '(?:B\.|\(B\))'
-        c = '(?:C\.|\(C\))'
-        d = '(?:D\.|\(D\))'
+        a = '(?:A\.?|\(A\))'
+        b = '(?:B\.?|\(B\))'
+        c = '(?:C\.?|\(C\))'
+        d = '(?:D\.?|\(D\))'
+        e = '(?:E\.?|\(E\))'
         l = '[^\n\r]+\n\s*'
         s = '\s+'
         #              A.          B.          C.             D.
-        regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})?)".format(a=a, b=b, c=c, d=d, line=l, s=s)
+        regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})(?:{e}{s}{line})?)".format(
+            a=a, b=b, c=c, d=d, e=e, line=l, s=s
+            )
         p = re.compile(regex, re.IGNORECASE)
 
         return p.split(string)
@@ -220,7 +223,7 @@ class ChunkParser (Parser):
         """
         questions = []
         question  = None
-        re_index  = r'(?:[A-Za-z]\.|\([A-Za-z]\))'
+        re_index  = r'(?:[A-Za-z]\.?|\([A-Za-z]\))'
         re_body   = r'[^\n]+'
         re_option = r'(\s*{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
         chunks = self._chunk(string)
@@ -230,7 +233,7 @@ class ChunkParser (Parser):
         for st_index in range(0, len(chunks), 2):
             op_index = st_index +1
             question = Question()
-            stem = re.search(r"\n*(.*)$", chunks[st_index])
+            stem = re.search(r"\n*(.+)$", chunks[st_index])
             if stem:
                 question.stem = stem.group().strip()
 

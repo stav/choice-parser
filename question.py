@@ -1,4 +1,6 @@
 
+import re
+
 class Question(object):
     """
     A question is composed of a stem and a list of options.
@@ -40,12 +42,13 @@ class Questions(object):
         self.length = len(questions)
         self.symetrical = self.__symetrical(questions)
         self.option_count = self.__get_option_count(questions)
+        self.ordered = self.__is_ordered(questions)
 
     def __str__(self):
         return self.__repr__
 
     def __repr__(self):
-        return '%d/%d%s' % (self.length, self.option_count, '/*' if self.symetrical else '')
+        return '%d/%d/%s/%s' % (self.length, self.option_count, 'o' if self.ordered else '', 's' if self.symetrical else '')
 
     def __symetrical(self, questions):
         if len(questions) <2: return False
@@ -66,3 +69,13 @@ class Questions(object):
             option_count += len(question.options)
 
         return option_count
+
+    def __is_ordered(self, questions):
+        for i in range(0, len(questions)):
+            index_match = re.search(r'^\s*([0-9]+)', questions[i].stem)
+            if not index_match: return False
+
+            index = int(index_match.group(1))
+            if index != i+1: return False
+
+        return True
