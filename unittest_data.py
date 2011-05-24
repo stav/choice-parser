@@ -51,6 +51,10 @@ class TestChoiceData(unittest.TestCase):
         self.router.load(['-i', 'input/computer.pdf', '-s'])
         self.assertEqual(len(self.router.questions), 20)
 
+    def test_imhotep(self):
+        self.router.load(['-i', 'input/imhotep', '-s'])
+        self.assertEqual(len(self.router.questions), 11)
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestChoiceData))

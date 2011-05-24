@@ -275,6 +275,7 @@ class Router(object):
         print 'stats: mogrifyers: %s' % self.mogrifyers
         print 'stats: parser: %s' % self.parser
         print 'stats: filters: %s' % self.filters
+        print 'stats:', {'questions': Questions(self.questions)}
         print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
 
         for question in self.questions:
@@ -329,7 +330,7 @@ class Router(object):
 
         # run all the parsers for the input string and load the results
         # into a hash.
-        for parserclass in ('IndexParser', 'BlockParser', 'ChunkParser'):
+        for parserclass in ('IndexParser', 'BlockParser', 'ChunkParser', 'QuestParser'):
             Parser = self.__forname("parser", parserclass)
             self.qhash[parserclass] = Questions(Parser().parse(string))
 
@@ -338,11 +339,13 @@ class Router(object):
         # ChunkParser otherwise we look for a symetrical IndexParser and
         # then a symetrical IndexParser and so on.
         if   False: parser = ''
+        elif self.qhash['QuestParser'].length > 1 and self.qhash['QuestParser'].ordered: parser = 'QuestParser'
         elif self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].ordered: parser = 'IndexParser'
         elif self.qhash['ChunkParser'].length > 1 and self.qhash['ChunkParser'].ordered: parser = 'ChunkParser'
         elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].ordered: parser = 'BlockParser'
 
         elif self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].symetrical: parser = 'IndexParser'
+        elif self.qhash['QuestParser'].length > 1 and self.qhash['QuestParser'].symetrical: parser = 'QuestParser'
         elif self.qhash['ChunkParser'].length > 1 and self.qhash['ChunkParser'].symetrical: parser = 'ChunkParser'
         elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].symetrical: parser = 'BlockParser'
 

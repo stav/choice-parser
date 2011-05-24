@@ -10,7 +10,7 @@ class Parser(object):
     tokens to determine what is the stem and what are the options.
     """
     def __init__(self):
-        pass
+        self.get_tokens = self._tokenize
 
     def _tokenize(self, string):
         """
@@ -44,13 +44,32 @@ class Parser(object):
         e = '(?:E\.?|\(E\))'
         l = '[^\n\r]+\n\s*'
         s = '\s+'
-        #              A.          B.          C.             D.
         regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})(?:{e}{s}{line})?)".format(
             a=a, b=b, c=c, d=d, e=e, line=l, s=s
             )
         p = re.compile(regex, re.IGNORECASE)
 
         return p.split(string)
+
+    def _quest(self, string):
+        """
+        @param  string  The input string
+        @return  list  The tokenized input
+        """
+        si = r'[0-9]+\.'
+        oa = r'A:'
+        ob = r'B:'
+        oc = r'C:'
+        od = r'D:'
+        body = r'.+?'
+        s = '\s+'
+        #              A.          B.          C.             D.
+        regex = r"({i}{s}{body}{a}{s}{body}{b}{s}{body}{c}{s}{body}{d}{s}{body}(?={i}{s}))".format(
+            i=si, a=oa, b=ob, c=oc, d=od, body=body, s=s
+            )
+        p = re.compile(regex, re.MULTILINE | re.DOTALL)
+
+        return [t.strip() for t in p.split(string) if t]
 
 ########################################################################
 class SingleParser (Parser):
@@ -72,7 +91,7 @@ class SingleParser (Parser):
         super(SingleParser, self).__init__()
 
     def parse(self, string):
-        tokens = self._tokenize(string)
+        tokens = self.get_tokens(string)
         if not tokens: return []
 
         question = Question()
@@ -107,8 +126,7 @@ class IndexParser (Parser):
         """
         questions = []
         question = None
-
-        for token in self._tokenize(string):
+        for token in self.get_tokens(string):
             s = re.match(r"^\s*\d+\.\s", token)
             if s and s.group():
                 if question and len(question.options) > 0:
@@ -117,7 +135,7 @@ class IndexParser (Parser):
                 question.stem = token
                 continue
 
-            o = re.match(r"^\s*[a-zA-Z][.)]\s", token)
+            o = re.match(r"^\s*[a-zA-Z][.):]\s", token)
             if o and o.group():
                 try:
                     assert question is not None
@@ -159,7 +177,7 @@ class BlockParser (Parser):
         question = Question()
         option = False
 
-        for token in self._tokenize(string):
+        for token in self.get_tokens(string):
             o = re.match(r"^\s*[a-zA-Z][.)] ", token)
             if o and o.group():
                 option = True
@@ -204,8 +222,7 @@ class ChunkParser (Parser):
     ... C.     Problem
     ... D.     Stem
     ... '''
-    >>> p = ChunkParser()
-    >>> Q = p.parse(i)
+    >>> Q = ChunkParser().parse(i)
     >>> len(Q)
     1
     >>> len(Q[0].options)
@@ -213,6 +230,7 @@ class ChunkParser (Parser):
     """
     def __init__(self):
         super(ChunkParser, self).__init__()
+        self.get_tokens = self._chunk
 
     def parse(self, string):
         """
@@ -226,7 +244,7 @@ class ChunkParser (Parser):
         re_index  = r'(?:[A-Za-z]\.?|\([A-Za-z]\))'
         re_body   = r'[^\n]+'
         re_option = r'(\s*{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
-        chunks = self._chunk(string)
+        chunks = self.get_tokens(string)
 
         # spin thru the input chunks two at a time, the first being the
         # stem, presumably, and the second being the option group
@@ -244,5 +262,61 @@ class ChunkParser (Parser):
                         question.options.append(option)
 
                     questions.append(question)
+
+        return questions
+
+########################################################################
+class QuestParser (Parser):
+    """
+    The quest parser uses the _quest() tokenizer.
+
+    >>> from router import Router
+    >>> r = Router()
+    >>> i = '''6. The bacteria Staphylococcus
+    ... aureus can be classified as a:A: Gram-negative cocciB: Spirochetes
+    ... C: Acid-fast bacilli D: Gram-positive cocci
+    ... '''
+    >>> Q = QuestParser().parse(i)
+    >>> len(Q)
+    1
+    >>> len(Q[0].options)
+    4
+    """
+    def __init__(self):
+        super(QuestParser, self).__init__()
+        self.get_tokens = self._quest
+
+    def parse(self, string):
+        """
+        Spin thru the tokens and create a list of Questions.
+
+        @param  string  The input string to parse
+        @return  list  The parsed Question objects
+        """
+        questions = []
+        question  = None
+        si = r'[0-9]+\.'
+        oa = r'A:'
+        ob = r'B:'
+        oc = r'C:'
+        od = r'D:'
+        body = r'.+?'
+        double_line_break = r'(?:(\n\n)|(\s*$))'
+        s = '\s+'
+        regex = r"({i}{s}{body})({a}{s}{body})({b}{s}{body})({c}{s}{body})({d}{s}.*?){lb}".format(
+            i=si, a=oa, b=ob, c=oc, d=od, body=body, s=s, lb=double_line_break,
+            )
+
+        for token in self.get_tokens(string):
+            question = Question()
+            match = re.search(regex, token, re.DOTALL)
+            #if match: print match.group(); import pdb; pdb.set_trace()
+            if match:
+                question.stem = match.group(1).strip()
+                question.options.append(match.group(2).strip())
+                question.options.append(match.group(3).strip())
+                question.options.append(match.group(4).strip())
+                question.options.append(match.group(5).strip())
+                questions.append(question)
 
         return questions
