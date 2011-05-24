@@ -330,7 +330,7 @@ class Router(object):
 
         # run all the parsers for the input string and load the results
         # into a hash.
-        for parserclass in ('IndexParser', 'BlockParser', 'ChunkParser', 'QuestParser'):
+        for parserclass in ('IndexParser', 'BlockParser', 'ChunkParser', 'QuestParser', 'StemsParser'):
             Parser = self.__forname("parser", parserclass)
             self.qhash[parserclass] = Questions(Parser().parse(string))
 
@@ -340,17 +340,21 @@ class Router(object):
         # then a symetrical IndexParser and so on.
         if   False: parser = ''
         elif self.qhash['QuestParser'].length > 1 and self.qhash['QuestParser'].ordered: parser = 'QuestParser'
-        elif self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].ordered: parser = 'IndexParser'
         elif self.qhash['ChunkParser'].length > 1 and self.qhash['ChunkParser'].ordered: parser = 'ChunkParser'
+        elif self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].ordered: parser = 'IndexParser'
+        elif self.qhash['StemsParser'].length > 1 and self.qhash['StemsParser'].ordered: parser = 'StemsParser'
         elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].ordered: parser = 'BlockParser'
 
-        elif self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].symetrical: parser = 'IndexParser'
         elif self.qhash['QuestParser'].length > 1 and self.qhash['QuestParser'].symetrical: parser = 'QuestParser'
         elif self.qhash['ChunkParser'].length > 1 and self.qhash['ChunkParser'].symetrical: parser = 'ChunkParser'
+        elif self.qhash['IndexParser'].length > 1 and self.qhash['IndexParser'].symetrical: parser = 'IndexParser'
+        elif self.qhash['StemsParser'].length > 1 and self.qhash['StemsParser'].symetrical: parser = 'StemsParser'
         elif self.qhash['BlockParser'].length > 1 and self.qhash['BlockParser'].symetrical: parser = 'BlockParser'
 
-        elif self.qhash['IndexParser'].length > 1: parser = 'IndexParser'
+        elif self.qhash['QuestParser'].length > 1: parser = 'QuestParser'
         elif self.qhash['ChunkParser'].length > 1: parser = 'ChunkParser'
+        elif self.qhash['IndexParser'].length > 1: parser = 'IndexParser'
+        elif self.qhash['StemsParser'].length > 1: parser = 'StemsParser'
         else:
             parser = 'SingleParser'
 

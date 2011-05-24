@@ -53,6 +53,8 @@ class Parser(object):
 
     def _quest(self, string):
         """
+        Create one token for each question, including the options in the token.
+
         @param  string  The input string
         @return  list  The tokenized input
         """
@@ -63,13 +65,38 @@ class Parser(object):
         od = r'D:'
         body = r'.+?'
         s = '\s+'
-        #              A.          B.          C.             D.
         regex = r"({i}{s}{body}{a}{s}{body}{b}{s}{body}{c}{s}{body}{d}{s}{body}(?={i}{s}))".format(
             i=si, a=oa, b=ob, c=oc, d=od, body=body, s=s
             )
-        p = re.compile(regex, re.MULTILINE | re.DOTALL)
+        p = re.compile(regex, re.DOTALL)
 
         return [t.strip() for t in p.split(string) if t]
+
+    def _stemify(self, string):
+        """
+        Create one token for each question, including the options in the token.
+
+        @param  string  The input string
+        @return  list  The tokenized input
+        """
+        si = r'\n\n[0-9]+\.\s+'
+        sb = r'.+?[?:.]\n\n'
+        o  = r'.+?'
+        regex = r"({si}{sb}{o}(?={si}))".format(
+            si=si, sb=sb, o=o,
+            )
+        p = re.compile(regex, re.DOTALL)
+
+        return [t.strip() for t in p.split(string) if t]
+
+    def parse(self, string):
+        """
+        Spin thru the tokens and create a list of Questions.
+
+        @param  string  The input string to parse
+        @return  list  The parsed Question objects
+        """
+        pass
 
 ########################################################################
 class SingleParser (Parser):
@@ -118,12 +145,6 @@ class IndexParser (Parser):
         super(IndexParser, self).__init__()
 
     def parse(self, string):
-        """
-        Spin thru the tokens and create a list of Questions.
-
-        @param  string  The input string to parse
-        @return  list  The parsed Question objects
-        """
         questions = []
         question = None
         for token in self.get_tokens(string):
@@ -167,12 +188,6 @@ class BlockParser (Parser):
         super(BlockParser, self).__init__()
 
     def parse(self, string):
-        """
-        Spin thru the tokens and create a list of Questions.
-
-        @param  string  The input string to parse
-        @return  list  The parsed Question objects
-        """
         questions = []
         question = Question()
         option = False
@@ -233,12 +248,6 @@ class ChunkParser (Parser):
         self.get_tokens = self._chunk
 
     def parse(self, string):
-        """
-        Spin thru the chunks and create a list of Questions.
-
-        @param  string  The input string to parse
-        @return  list  The parsed Question objects
-        """
         questions = []
         question  = None
         re_index  = r'(?:[A-Za-z]\.?|\([A-Za-z]\))'
@@ -287,12 +296,6 @@ class QuestParser (Parser):
         self.get_tokens = self._quest
 
     def parse(self, string):
-        """
-        Spin thru the tokens and create a list of Questions.
-
-        @param  string  The input string to parse
-        @return  list  The parsed Question objects
-        """
         questions = []
         question  = None
         si = r'[0-9]+\.'
@@ -317,6 +320,55 @@ class QuestParser (Parser):
                 question.options.append(match.group(3).strip())
                 question.options.append(match.group(4).strip())
                 question.options.append(match.group(5).strip())
+                questions.append(question)
+
+        return questions
+
+########################################################################
+class StemsParser (Parser):
+    """
+    The quest parser uses the _quest() tokenizer.
+
+    >>> from router import Router
+    >>> r = Router()
+    >>> i = '''2. Grabbing the front brake or jamming down on the rear brake:
+    ...
+    ... Can cause the brakes to lock.
+    ... Is the best way to stop in an emergency.
+    ... Is the best way to slow down when the streets are wet.
+    ... '''
+    >>> Q = StemsParser().parse(i)
+    >>> len(Q)
+    1
+    >>> len(Q[0].options)
+    3
+    """
+    def __init__(self):
+        super(StemsParser, self).__init__()
+        self.get_tokens = self._stemify
+
+    def parse(self, string):
+        questions = []
+        question  = None
+        si = r'[0-9]+\.\s+'
+        sb = r'.+?[?:.]\n\n'
+        o  = r'.+'
+        regex = r"({si}{sb})({o})".format(
+            si=si, sb=sb, o=o,
+            )
+
+        #import pdb; pdb.set_trace()
+        for token in self.get_tokens(string):
+            question = Question()
+            match = re.search(regex, token, re.DOTALL)
+            #if match: print match.group(); import pdb; pdb.set_trace()
+            if match:
+                question.stem = match.group(1).strip()
+                for option in match.group(2).split('\n'):
+                    if option:
+                        question.options.append(option.strip())
+                    else:
+                        break
                 questions.append(question)
 
         return questions

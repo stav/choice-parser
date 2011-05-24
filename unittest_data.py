@@ -15,7 +15,6 @@ class TestChoiceData(unittest.TestCase):
 
     def test_anarchy(self):
         self.router.load(['-i', 'input/anarchy', '-s'])
-        self.assertTrue(isinstance(self.router.parser, IndexParser))
         self.assertEqual(len(self.router.questions), 10)
 
     def test_drivers(self):
@@ -54,6 +53,10 @@ class TestChoiceData(unittest.TestCase):
     def test_imhotep(self):
         self.router.load(['-i', 'input/imhotep', '-s'])
         self.assertEqual(len(self.router.questions), 11)
+
+    def test_motorcycle(self):
+        self.router.load(['-i', 'input/motorcycle', '-s'])
+        self.assertEqual(len(self.router.questions), 10)
 
 def suite():
     suite = unittest.TestSuite()
