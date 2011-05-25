@@ -93,7 +93,7 @@ class Router(object):
                             help='Qualify the output with the question parts') # e.g. "stem = ...."
 
         command_line.add_argument('-i', dest='inputfile', nargs='?', metavar='INFL',
-                            type=argparse.FileType('r'), default=sys.stdin,
+                            type=open, default=sys.stdin,
                             help='input filename, def=stdin')
 
         command_line.add_argument('-o', dest='outputfile', metavar='OUFL', nargs='?',
@@ -274,6 +274,9 @@ class Router(object):
         print 'stats: qhash: ', self.qhash
         print 'stats: mogrifyers: %s' % self.mogrifyers
         print 'stats: parser: %s' % self.parser
+        for i in range(0, len(self.parser.tokens)):
+            print 'stats: token', i, '\n'
+            print self.parser.tokens[i].replace('\n', '\\n')
         print 'stats: filters: %s' % self.filters
         print 'stats:', {'questions': Questions(self.questions)}
         print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
@@ -308,8 +311,6 @@ class Router(object):
                 print 'mogrifyer', sys.exc_info()[1]
             else:
                 yield Mogrifyer()
-
-        yield self.__forname("mogrifyer", 'SplitstemMogrifyer')()
 
     def _get_parser(self, string=''):
         """

@@ -33,7 +33,7 @@ class TestChoiceData(unittest.TestCase):
         self.assertEqual(len(self.router.questions), 10)
 
     def test_choices(self):
-        self.router.load(['-i', 'input/choices', '-m', 'BooleanoptionMogrifyer', '-s'])
+        self.router.load('-i input/choices  -m BooleanoptionMogrifyer,SplitstemMogrifyer  -s'.split())
         self.assertEqual(len(self.router.questions), 7)
 
     def test_teachers(self):
@@ -51,7 +51,7 @@ class TestChoiceData(unittest.TestCase):
         self.assertEqual(len(self.router.questions), 20)
 
     def test_imhotep(self):
-        self.router.load(['-i', 'input/imhotep', '-s'])
+        self.router.load('-i input/imhotep  -m SplitstemMogrifyer  -s'.split())
         self.assertEqual(len(self.router.questions), 11)
 
     def test_motorcycle(self):

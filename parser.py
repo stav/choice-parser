@@ -9,8 +9,25 @@ class Parser(object):
     The parser breaks up a string into tokens and then looks through those
     tokens to determine what is the stem and what are the options.
     """
-    def __init__(self):
+    def __init__(self, save_data=False):
         self.get_tokens = self._tokenize
+        self.save_data  = save_data
+        self.questions  = []
+        self.tokens     = []
+
+    def __str__(self):
+        return '<%s.%s save=%s, tokens=%d, questions=%d>' % (
+            __name__,
+            self.__class__.__name__,
+            self.save_data,
+            len(self.tokens),
+            len(self.questions),
+            )
+
+    def __safety(self, tokens):
+        if self.save_data:
+            self.tokens = tokens
+        return tokens
 
     def _tokenize(self, string):
         """
@@ -26,7 +43,7 @@ class Parser(object):
             if token.strip() != '':
                 tokens.append(token)
 
-        return tokens
+        return self.__safety(tokens)
 
     def _chunk(self, string):
         """
@@ -49,7 +66,7 @@ class Parser(object):
             )
         p = re.compile(regex, re.IGNORECASE)
 
-        return p.split(string)
+        return self.__safety(p.split(string))
 
     def _quest(self, string):
         """
@@ -70,7 +87,7 @@ class Parser(object):
             )
         p = re.compile(regex, re.DOTALL)
 
-        return [t.strip() for t in p.split(string) if t]
+        return self.__safety([t.strip() for t in p.split(string) if t])
 
     def _stemify(self, string):
         """
@@ -87,7 +104,7 @@ class Parser(object):
             )
         p = re.compile(regex, re.DOTALL)
 
-        return [t.strip() for t in p.split(string) if t]
+        return self.__safety([t.strip() for t in p.split(string) if t])
 
     def parse(self, string):
         """
@@ -249,7 +266,6 @@ class ChunkParser (Parser):
 
     def parse(self, string):
         questions = []
-        question  = None
         re_index  = r'(?:[A-Za-z]\.?|\([A-Za-z]\))'
         re_body   = r'[^\n]+'
         re_option = r'(\s*{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
@@ -297,7 +313,6 @@ class QuestParser (Parser):
 
     def parse(self, string):
         questions = []
-        question  = None
         si = r'[0-9]+\.'
         oa = r'A:'
         ob = r'B:'
@@ -344,12 +359,11 @@ class StemsParser (Parser):
     3
     """
     def __init__(self):
-        super(StemsParser, self).__init__()
+        super(StemsParser, self).__init__(False)
         self.get_tokens = self._stemify
 
     def parse(self, string):
         questions = []
-        question  = None
         si = r'[0-9]+\.\s+'
         sb = r'.+?[?:.]\n\n'
         o  = r'.+'
