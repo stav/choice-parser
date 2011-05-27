@@ -1,0 +1,20 @@
+test_anarchy (unittest_data.TestChoiceData) ... ok
+test_choices (unittest_data.TestChoiceData) ... ok
+test_computer (unittest_data.TestChoiceData) ... ok
+test_drivers (unittest_data.TestChoiceData) ... ok
+test_imhotep (unittest_data.TestChoiceData) ... ok
+test_motorcycle (unittest_data.TestChoiceData) ... ok
+test_reading (unittest_data.TestChoiceData) ... ok
+test_teachers (unittest_data.TestChoiceData) ... ok
+test_victoria (unittest_data.TestChoiceData) ... ok
+test_writing (unittest_data.TestChoiceData) ... ok
+test_filter (unittest_doctest.TestChoiceDoctest) ... ok
+test_mogrifyer (unittest_doctest.TestChoiceDoctest) ... ok
+test_parser (unittest_doctest.TestChoiceDoctest) ... ok
+test_router (unittest_doctest.TestChoiceDoctest) ... ok
+test_writer (unittest_doctest.TestChoiceDoctest) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 1.885s
+
+OK

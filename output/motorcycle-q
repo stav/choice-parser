@@ -1,0 +1,50 @@
+stem = 1. What are the requirements for wearing a helmet?
+option = Passengers only are required to wear helmets.
+option = All motorcycle riders and passengers are required to wear helmets at all times.
+option = Helmets are not required while driving on city streets.
+
+stem = 2. Grabbing the front brake or jamming down on the rear brake:
+option = Can cause the brakes to lock.
+option = Is the best way to stop in an emergency.
+option = Is the best way to slow down when the streets are wet.
+
+stem = 3. Passengers on motorcycles should:
+option = Put their feet on the ground when the motorcycle is stopped.
+option = Not ride without a back rest.
+option = Should sit as far forward as possible without crowding you.
+
+stem = 4. When riding with a group of motorcyclists, a staggered formation:
+option = Is recommended at all times.
+option = Should not be used when entering or exiting a highway.
+option = Should be used when riding on curves.
+
+stem = 5. Eye protection:
+option = Is not needed if your motorcycle is equipped with a windshield.
+option = Is only needed when riding in bad weather.
+option = Should give a clear view to either side.
+
+stem = 6. A primary cause of single vehicle motorcycle accidents is:
+option = Motorcyclists' tendency to drive too fast for weather conditions.
+option = Motorcyclists running wide in a curve or turn and colliding with the roadway or a fixed object.
+option = Motorcyclists running off the road while trying to avoid a collision with another vehicle.
+
+stem = 7. The best lane position for a motorcycle:
+option = Is in the left part of the lane, next to the center line.
+option = Is in the right part of the lane, next to the curb.
+option = Can vary depending on road and/or traffic conditions.
+
+stem = 8. When riding at night you should:
+option = Move closer to the vehicle in front of you to use its lights to see farther down the road.
+option = Keep driving at your normal speed because slowing down would increase the chance of being struck from behind.
+option = Reduce your speed because it is harder to see something lying in the road.
+
+stem = 9. You should operate the engine cut-off switch and pull in the clutch when:
+option = The throttle is stuck and you can't free it.
+option = You start to lose control in a curve.
+option = The motorcycle starts to wobble.
+
+stem = 10. To operate a moped you must have at least a _______ license.
+option = Class M1
+option = Class M2
+option = Class C
+

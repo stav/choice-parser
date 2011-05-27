@@ -24,7 +24,7 @@ class Router(object):
                 mogrify()
                 parse()
                 filter()
-                show-stats()
+                <show stats>
 
             write()
     """

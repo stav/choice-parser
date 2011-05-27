@@ -3,7 +3,7 @@
 """
 Choice-parser is a project that takes input from various sources and tries
 to parse it to see if it is a multiple choice test in which case it saves
-all the questions so that they can be output also in various formats.
+all the questions so that they can be output in various formats.
 """
 
 from router import Router

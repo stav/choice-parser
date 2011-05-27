@@ -1,0 +1,43 @@
+<router.Router, questions=10>
+{   'filters': [],
+    'input': None,
+    'inputfile': <open file 'input/motorcycle', mode 'rU' at 0x98de548>,
+    'mogrifyers': [],
+    'outputfile': <open file '/dev/null', mode 'w' at 0x98de5a0>,
+    'parser': None,
+    'qualify': False,
+    'safety': True,
+    'stats': 2,
+    'writer': None}
+input: input/motorcycle, open, mode rU, size 2606, encoding None, newlines '\n'
+{   'BlockParser': 0/0//,
+    'ChunkParser': 0/0//,
+    'IndexParser': 0/0//,
+    'QuestParser': 0/0//,
+    'StemsParser': 10/30/o/s}
+mogrifyers: []
+filters: []
+parser: '<parser.StemsParser save=True, tokens=11, questions=10>'
+tokens: [   'Sample Motorcycle Drivers Written Test 1\n\nCAUTION:\n\nYour browser must be         token  1',
+    '1. What are the requirements for wearing a helmet?\n\nPassengers only are          token  2',
+    '2. Grabbing the front brake or jamming down on the rear brake:\n\nCan caus         token  3',
+    '3. Passengers on motorcycles should:\n\nPut their feet on the ground when          token  4',
+    '4. When riding with a group of motorcyclists, a staggered formation:\n\nIs         token  5',
+    '5. Eye protection:\n\nIs not needed if your motorcycle is equipped with a          token  6',
+    '6. A primary cause of single vehicle motorcycle accidents is:\n\nMotorcycl         token  7',
+    '7. The best lane position for a motorcycle:\n\nIs in the left part of the          token  8',
+    '8. When riding at night you should:\n\nMove closer to the vehicle in front         token  9',
+    '9. You should operate the engine cut-off switch and pull in the clutch w         token 10',
+    '10. To operate a moped you must have at least a _______ license.\n\nClass          token 11']
+{   'questions': 10/30/o/s}
+1. What are the requirements for wearing a helmet?                         50 byte stem, 3 options question 1
+2. Grabbing the front brake or jamming down on the rear brake:             62 byte stem, 3 options question 2
+3. Passengers on motorcycles should:                                       36 byte stem, 3 options question 3
+4. When riding with a group of motorcyclists, a staggered formation:       68 byte stem, 3 options question 4
+5. Eye protection:                                                         18 byte stem, 3 options question 5
+6. A primary cause of single vehicle motorcycle accidents is:              61 byte stem, 3 options question 6
+7. The best lane position for a motorcycle:                                43 byte stem, 3 options question 7
+8. When riding at night you should:                                        35 byte stem, 3 options question 8
+9. You should operate the engine cut-off switch and pull in the clutch w   76 byte stem, 3 options question 9
+10. To operate a moped you must have at least a _______ license.           64 byte stem, 3 options question 10
+        
