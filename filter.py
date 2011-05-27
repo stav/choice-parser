@@ -20,8 +20,8 @@ class IndexFilter (object):
     >>> q = f.filter([q])[0]
     >>> len(q.stem)
     25
-    >>> print q
-    What is the IndexFilter? 3
+    >>> len(q.options)
+    3
     """
     def filter(self, questions):
         filtered_questions = []
@@ -59,8 +59,8 @@ class WhitespaceFilter (object):
     >>> q = f.filter([q])[0]
     >>> len(q.stem)
     32
-    >>> print q
-    1. What is the WhitespaceFilter? 3
+    >>> len(q.options)
+    3
     """
     def filter(self, questions):
         filtered_questions = []
@@ -93,8 +93,8 @@ class QualifiedFilter (object):
     >>> q = f.filter([q])[0]
     >>> len(q.stem)
     38
-    >>> print q
-    stem = 1. What is the QualifiedFilter? 3
+    >>> len(q.options)
+    3
     """
     def filter(self, questions):
         filtered_questions = []

@@ -9,9 +9,9 @@ class Parser(object):
     The parser breaks up a string into tokens and then looks through those
     tokens to determine what is the stem and what are the options.
     """
-    def __init__(self, save_data=False):
+    def __init__(self, safety=False):
         self.get_tokens = self._tokenize
-        self.save_data  = save_data
+        self.safety     = safety
         self.questions  = []
         self.tokens     = []
 
@@ -19,13 +19,13 @@ class Parser(object):
         return '<%s.%s save=%s, tokens=%d, questions=%d>' % (
             __name__,
             self.__class__.__name__,
-            self.save_data,
+            self.safety,
             len(self.tokens),
             len(self.questions),
             )
 
     def __safety(self, tokens):
-        if self.save_data:
+        if self.safety:
             self.tokens = tokens
         return tokens
 
@@ -59,9 +59,9 @@ class Parser(object):
         c = '(?:C\.?|\(C\))'
         d = '(?:D\.?|\(D\))'
         e = '(?:E\.?|\(E\))'
-        l = '[^\n\r]+\n\s*'
+        l = '[^\n\r]*\n\s*'
         s = '\s+'
-        regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})(?:{e}{s}{line})?)".format(
+        regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})(?:{e}.*)?)".format(
             a=a, b=b, c=c, d=d, e=e, line=l, s=s
             )
         p = re.compile(regex, re.IGNORECASE)
@@ -131,8 +131,8 @@ class SingleParser (Parser):
     >>> len(q.options)
     2
     """
-    def __init__(self):
-        super(SingleParser, self).__init__()
+    def __init__(self, safety=False):
+        super(SingleParser, self).__init__(safety)
 
     def parse(self, string):
         tokens = self.get_tokens(string)
@@ -158,8 +158,8 @@ class IndexParser (Parser):
     >>> len(Q)
     10
     """
-    def __init__(self):
-        super(IndexParser, self).__init__()
+    def __init__(self, safety=False):
+        super(IndexParser, self).__init__(safety)
 
     def parse(self, string):
         questions = []
@@ -201,8 +201,8 @@ class BlockParser (Parser):
     >>> len(Q)
     11
     """
-    def __init__(self):
-        super(BlockParser, self).__init__()
+    def __init__(self, safety=False):
+        super(BlockParser, self).__init__(safety)
 
     def parse(self, string):
         questions = []
@@ -260,8 +260,8 @@ class ChunkParser (Parser):
     >>> len(Q[0].options)
     4
     """
-    def __init__(self):
-        super(ChunkParser, self).__init__()
+    def __init__(self, safety=False):
+        super(ChunkParser, self).__init__(safety)
         self.get_tokens = self._chunk
 
     def parse(self, string):
@@ -307,8 +307,8 @@ class QuestParser (Parser):
     >>> len(Q[0].options)
     4
     """
-    def __init__(self):
-        super(QuestParser, self).__init__()
+    def __init__(self, safety=False):
+        super(QuestParser, self).__init__(safety)
         self.get_tokens = self._quest
 
     def parse(self, string):
@@ -358,8 +358,8 @@ class StemsParser (Parser):
     >>> len(Q[0].options)
     3
     """
-    def __init__(self):
-        super(StemsParser, self).__init__(False)
+    def __init__(self, safety=False):
+        super(StemsParser, self).__init__(safety)
         self.get_tokens = self._stemify
 
     def parse(self, string):

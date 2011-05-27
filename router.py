@@ -83,11 +83,9 @@ class Router(object):
                             version='%(prog)s Router version ' + self.version + ' developed with ' + self.develenv,
                             help='print the version information and exit')
 
-        command_line.add_argument('-v', '--verbose', action='store_true',
-                            help='verbose output including doc-testing')
-
-        command_line.add_argument('-s', '--silent', action='store_true',
-                            help='do not print out statistical information')
+        command_line.add_argument('-s', '--stats', nargs='?', metavar='SLVL',
+                            type=int, default=0, const=1,
+                            help='stats print level: 1, 2, 3 (3=most)')
 
         command_line.add_argument('-q', '--qualify', action='store_true',
                             help='Qualify the output with the question parts') # e.g. "stem = ...."
@@ -118,9 +116,12 @@ class Router(object):
         # load the commandline options
         self.options = command_line.parse_args(options)
 
-        # 'asdf , qwer' ==>> ['asdf', 'qwer']
+        # 'foo , bar' ==>> ['foo', 'bar']
         self.options.filters    = [f.strip() for f in self.options.filters.split(',')   ] if self.options.filters    else []
         self.options.mogrifyers = [m.strip() for m in self.options.mogrifyers.split(',')] if self.options.mogrifyers else []
+
+        # stats level two forces parsers to retain their data
+        self.options.safety = True if self.options.stats > 1 else False
 
     def load(self, options=sys.argv[1:]):
         """
@@ -128,7 +129,7 @@ class Router(object):
         filtering.
 
         >>> r = Router()
-        >>> r.load(['-s', '''This is the stem
+        >>> r.load(['''This is the stem
         ... This is an option'''])
         >>> len(r.questions)
         1
@@ -139,7 +140,7 @@ class Router(object):
 
         self.filter()
 
-        if not self.options.silent:
+        if self.options.stats:
             self.show_stats()
 
     def start(self, options=sys.argv[1:]):
@@ -149,9 +150,6 @@ class Router(object):
         >>> r = Router()
         >>> r.start(['''This is the stem
         ... This is an option'''])
-        stats: ...
-        stats: 1 question found.
-        stats: stem is 16 bytes long, 1 option found.
         This is the stem
         This is an option
         """
@@ -275,18 +273,19 @@ class Router(object):
         print 'stats: mogrifyers: %s' % self.mogrifyers
         print 'stats: parser: %s' % self.parser
         for i in range(0, len(self.parser.tokens)):
-            print 'stats: token', i, '\n'
+            print '____________________________\nstats: token', i
             print self.parser.tokens[i].replace('\n', '\\n')
         print 'stats: filters: %s' % self.filters
         print 'stats:', {'questions': Questions(self.questions)}
         print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
 
         for question in self.questions:
-            print 'stats: stem is %d bytes long, %d option%s found.' % (
-                len(question.stem),
-                len(question.options),
-                's' if len(question.options) != 1 else ''
-                )
+            print question
+            #~ print 'stats: stem is %d bytes long, %d option%s found.' % (
+                #~ len(question.stem),
+                #~ len(question.options),
+                #~ 's' if len(question.options) != 1 else ''
+                #~ )
 
     # Protected methods
     # ------------------------------------------------------------------
@@ -327,7 +326,7 @@ class Router(object):
         <parser.IndexParser object at...
         """
         if self.options.parser:
-            return self.__forname("parser", self.options.parser)()
+            return self.__forname("parser", self.options.parser)(self.options.safety)
 
         # run all the parsers for the input string and load the results
         # into a hash.
@@ -359,7 +358,7 @@ class Router(object):
         else:
             parser = 'SingleParser'
 
-        return self.__forname("parser", parser)()
+        return self.__forname("parser", parser)(self.options.safety)
 
     def _get_filters(self):
         for filter in self.options.filters:

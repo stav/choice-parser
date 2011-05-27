@@ -25,7 +25,7 @@ class Question(object):
         self.options = []
 
     def __str__(self):
-        return '%s %d' % (self.stem, len(self.options))
+        return '%-72s %4d byte stem,%2d options' % (self.stem[0:72], len(self.stem), len(self.options))
 
 class Questions(object):
     """
