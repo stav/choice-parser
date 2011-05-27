@@ -10,23 +10,23 @@ class Parser(object):
     tokens to determine what is the stem and what are the options.
     """
     def __init__(self, safety=False):
-        self.get_tokens = self._tokenize
-        self.safety     = safety
-        self.questions  = []
-        self.tokens     = []
+        self._get_tokens = self._tokenize
+        self._safety     = safety
+        self._questions  = []
+        self._tokens     = []
 
     def __str__(self):
         return '<%s.%s save=%s, tokens=%d, questions=%d>' % (
             __name__,
             self.__class__.__name__,
-            self.safety,
-            len(self.tokens),
-            len(self.questions),
+            self._safety,
+            len(self._tokens),
+            len(self._questions),
             )
 
     def __safety(self, tokens):
-        if self.safety:
-            self.tokens = tokens
+        if self._safety:
+            self._tokens = tokens
         return tokens
 
     def _tokenize(self, string):
@@ -111,9 +111,25 @@ class Parser(object):
         Spin thru the tokens and create a list of Questions.
 
         @param  string  The input string to parse
-        @return  list  The parsed Question objects
+        @return  Parser  Enable method chaining
         """
         pass
+
+    def get_questions(self):
+        """
+        Return the parsed questions list.
+
+        @return  list  The parsed questions
+        """
+        return self._questions
+
+    def get_tokens(self):
+        """
+        Return the tokenized string list
+
+        @return  list  The tokens
+        """
+        return self._tokens
 
 ########################################################################
 class SingleParser (Parser):
@@ -126,23 +142,25 @@ class SingleParser (Parser):
     ... This is the first option
     ... This is the second option
     ... '''
-    >>> p = SingleParser()
-    >>> q = p.parse(i)[0]
-    >>> len(q.options)
-    2
+    >>> p = SingleParser().parse(i)
+    >>> q = p.get_questions()
+    >>> assert len(q) == 1
+    >>> assert len(q[0].options) == 2
     """
     def __init__(self, safety=False):
         super(SingleParser, self).__init__(safety)
 
     def parse(self, string):
-        tokens = self.get_tokens(string)
-        if not tokens: return []
+        tokens = self._get_tokens(string)
+        if not tokens: return self
 
         question = Question()
         question.stem = tokens[0]
         question.options = tokens[1:] if len(tokens) > 1 else []
 
-        return [question]
+        self._questions.append(question)
+
+        return self
 
 ########################################################################
 class IndexParser (Parser):
@@ -154,21 +172,20 @@ class IndexParser (Parser):
     >>> r = Router()
     >>> r.setup(['-i', 'input/anarchy'])
     >>> i = r.get_input()
-    >>> Q = IndexParser().parse(i)
-    >>> len(Q)
+    >>> p = IndexParser().parse(i)
+    >>> len(p.get_questions())
     10
     """
     def __init__(self, safety=False):
         super(IndexParser, self).__init__(safety)
 
     def parse(self, string):
-        questions = []
         question = None
-        for token in self.get_tokens(string):
+        for token in self._get_tokens(string):
             s = re.match(r"^\s*\d+\.\s", token)
             if s and s.group():
                 if question and len(question.options) > 0:
-                    questions.append(question)
+                    self._questions.append(question)
                 question = Question()
                 question.stem = token
                 continue
@@ -183,9 +200,9 @@ class IndexParser (Parser):
                     pass
 
         if question and len(question.options) > 0:
-            questions.append(question)
+            self._questions.append(question)
 
-        return questions
+        return self
 
 ########################################################################
 class BlockParser (Parser):
@@ -197,19 +214,18 @@ class BlockParser (Parser):
     >>> r = Router()
     >>> r.setup(['-i', 'input/drivers'])
     >>> i = r.get_input()
-    >>> Q = BlockParser().parse(i)
-    >>> len(Q)
+    >>> p = BlockParser().parse(i)
+    >>> len(p.get_questions())
     11
     """
     def __init__(self, safety=False):
         super(BlockParser, self).__init__(safety)
 
     def parse(self, string):
-        questions = []
         question = Question()
         option = False
 
-        for token in self.get_tokens(string):
+        for token in self._get_tokens(string):
             o = re.match(r"^\s*[a-zA-Z][.)] ", token)
             if o and o.group():
                 option = True
@@ -221,7 +237,7 @@ class BlockParser (Parser):
                 continue
 
             if option:
-                questions.append(question)
+                self._questions.append(question)
                 question = Question()
                 question.stem = ''
                 option = False
@@ -233,9 +249,9 @@ class BlockParser (Parser):
                 pass
 
         if question and len(question.options) > 0:
-            questions.append(question)
+            self._questions.append(question)
 
-        return questions
+        return self
 
 ########################################################################
 class ChunkParser (Parser):
@@ -254,22 +270,22 @@ class ChunkParser (Parser):
     ... C.     Problem
     ... D.     Stem
     ... '''
-    >>> Q = ChunkParser().parse(i)
-    >>> len(Q)
+    >>> p = ChunkParser().parse(i)
+    >>> q = p.get_questions()
+    >>> len(q)
     1
-    >>> len(Q[0].options)
+    >>> len(q[0].options)
     4
     """
     def __init__(self, safety=False):
         super(ChunkParser, self).__init__(safety)
-        self.get_tokens = self._chunk
+        self._get_tokens = self._chunk
 
     def parse(self, string):
-        questions = []
         re_index  = r'(?:[A-Za-z]\.?|\([A-Za-z]\))'
         re_body   = r'[^\n]+'
         re_option = r'(\s*{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
-        chunks = self.get_tokens(string)
+        chunks = self._get_tokens(string)
 
         # spin thru the input chunks two at a time, the first being the
         # stem, presumably, and the second being the option group
@@ -286,9 +302,9 @@ class ChunkParser (Parser):
                     for option in options:
                         question.options.append(option)
 
-                    questions.append(question)
+                    self._questions.append(question)
 
-        return questions
+        return self
 
 ########################################################################
 class QuestParser (Parser):
@@ -301,18 +317,18 @@ class QuestParser (Parser):
     ... aureus can be classified as a:A: Gram-negative cocciB: Spirochetes
     ... C: Acid-fast bacilli D: Gram-positive cocci
     ... '''
-    >>> Q = QuestParser().parse(i)
-    >>> len(Q)
+    >>> p = QuestParser().parse(i)
+    >>> q = p.get_questions()
+    >>> len(q)
     1
-    >>> len(Q[0].options)
+    >>> len(q[0].options)
     4
     """
     def __init__(self, safety=False):
         super(QuestParser, self).__init__(safety)
-        self.get_tokens = self._quest
+        self._get_tokens = self._quest
 
     def parse(self, string):
-        questions = []
         si = r'[0-9]+\.'
         oa = r'A:'
         ob = r'B:'
@@ -325,7 +341,7 @@ class QuestParser (Parser):
             i=si, a=oa, b=ob, c=oc, d=od, body=body, s=s, lb=double_line_break,
             )
 
-        for token in self.get_tokens(string):
+        for token in self._get_tokens(string):
             question = Question()
             match = re.search(regex, token, re.DOTALL)
             #if match: print match.group(); import pdb; pdb.set_trace()
@@ -335,9 +351,9 @@ class QuestParser (Parser):
                 question.options.append(match.group(3).strip())
                 question.options.append(match.group(4).strip())
                 question.options.append(match.group(5).strip())
-                questions.append(question)
+                self._questions.append(question)
 
-        return questions
+        return self
 
 ########################################################################
 class StemsParser (Parser):
@@ -352,18 +368,16 @@ class StemsParser (Parser):
     ... Is the best way to stop in an emergency.
     ... Is the best way to slow down when the streets are wet.
     ... '''
-    >>> Q = StemsParser().parse(i)
-    >>> len(Q)
-    1
-    >>> len(Q[0].options)
-    3
+    >>> p = StemsParser().parse(i)
+    >>> q = p.get_questions()
+    >>> assert len(q) == 1
+    >>> assert len(q[0].options) == 3
     """
     def __init__(self, safety=False):
         super(StemsParser, self).__init__(safety)
-        self.get_tokens = self._stemify
+        self._get_tokens = self._stemify
 
     def parse(self, string):
-        questions = []
         si = r'[0-9]+\.\s+'
         sb = r'.+?[?:.]\n\n'
         o  = r'.+'
@@ -372,7 +386,7 @@ class StemsParser (Parser):
             )
 
         #import pdb; pdb.set_trace()
-        for token in self.get_tokens(string):
+        for token in self._get_tokens(string):
             question = Question()
             match = re.search(regex, token, re.DOTALL)
             #if match: print match.group(); import pdb; pdb.set_trace()
@@ -383,6 +397,6 @@ class StemsParser (Parser):
                         question.options.append(option.strip())
                     else:
                         break
-                questions.append(question)
+                self._questions.append(question)
 
-        return questions
+        return self

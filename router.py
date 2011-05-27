@@ -1,8 +1,11 @@
 
 import sys
+import pprint
 import argparse
 
 from subprocess import Popen, PIPE, STDOUT
+from os         import path
+
 from question import Question
 from question import Questions
 
@@ -37,28 +40,63 @@ class Router(object):
     # Development enviroment
     develenv = 'Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24) [GCC 4.5.2] on linux2'
 
-    # Property: options
-    # Command line arguments
-    options = None
-
-    # Property: questions
-    # The list of questions
-    questions = ''
-
-    # Property: qhash
-    # A numerical description of the parsed list of questions
-    qhash = {}
-
     # Constructor
     # ------------------------------------------------------------------
 
     def __init__(self):
-        self.questions = ''
+        self.questions = []
         self.qhash     = {}
         self.options   = None
         self.parser    = None
         self.mogrifyers= []
         self.filters   = []
+        self.PrettyPrinter = pprint.PrettyPrinter(indent=4, width=72)
+
+    # Magic methods
+    # ------------------------------------------------------------------
+
+    def __str__(self):
+        infile = self.options.inputfile
+        tokens = self.parser.get_tokens() if self.parser else []
+
+        if self.options.safety:
+            f = self.PrettyPrinter.pformat
+        else:
+            f = str
+
+        return '''<%s.%s, questions=%d>
+%s
+input: %s, %s, mode %s,%s encoding %s, newlines %s
+%s
+mogrifyers: %s
+filters: %s
+parser: %s
+tokens: %s
+%s
+%s
+        ''' % (
+            __name__,
+            self.__class__.__name__,
+            len(self.questions),
+# options
+            f(vars(self.options)),
+# input
+            infile.name,
+            'closed' if infile.closed else 'open',
+            infile.mode,
+            ' size %d,' % path.getsize(infile.name) if infile != sys.stdin else '',
+            infile.encoding,
+            repr(infile.newlines),
+# qhash & formatters
+            f(self.qhash),
+            f(self.mogrifyers),
+            f(self.filters),
+# parser
+            f(str(self.parser)),
+            f(['%-80s token %2d' % (tokens[i][0:72], i+1) for i in range(0, len(tokens))]),
+            f({'questions': Questions(self.questions)}),
+            '\n'.join(['%s question %d' % (self.questions[i], i+1) for i in range(0, len(self.questions))]),
+            )
 
     # Public methods
     # ------------------------------------------------------------------
@@ -91,7 +129,7 @@ class Router(object):
                             help='Qualify the output with the question parts') # e.g. "stem = ...."
 
         command_line.add_argument('-i', dest='inputfile', nargs='?', metavar='INFL',
-                            type=open, default=sys.stdin,
+                            type=argparse.FileType('rU'), default=sys.stdin,
                             help='input filename, def=stdin')
 
         command_line.add_argument('-o', dest='outputfile', metavar='OUFL', nargs='?',
@@ -141,7 +179,7 @@ class Router(object):
         self.filter()
 
         if self.options.stats:
-            self.show_stats()
+            print self
 
     def start(self, options=sys.argv[1:]):
         """
@@ -202,7 +240,8 @@ class Router(object):
         try:
             if string:
                 self.parser = self._get_parser(string)
-                self.questions = self.parser.parse(string)
+                self.parser.parse(string)
+                self.questions = self.parser.get_questions()
 
         except AttributeError:
             sys.stderr.write("Could not parse input. ")
@@ -242,9 +281,9 @@ class Router(object):
 
     def get_input(self, inputfile=None):
         """
-        Return the input from the command-line. If an inputfile is designated
-        then return that file's contents.  Otherwise, if no input is specified
-        then read from standard input.
+        Return the input from the file designated on the commad line.
+        Note that if no input file is designated then the input file
+        is the default standard input.
 
         @param  inputfile  File  The open input file object
         @return  string  The input
@@ -264,29 +303,6 @@ class Router(object):
 
         return self._read(inputfile)
 
-    def show_stats(self):
-        """
-        Display internal statistics.  Silenced with the -s switch.
-        """
-        print 'stats: self.options: ', repr(self.options)
-        print 'stats: qhash: ', self.qhash
-        print 'stats: mogrifyers: %s' % self.mogrifyers
-        print 'stats: parser: %s' % self.parser
-        for i in range(0, len(self.parser.tokens)):
-            print '____________________________\nstats: token', i
-            print self.parser.tokens[i].replace('\n', '\\n')
-        print 'stats: filters: %s' % self.filters
-        print 'stats:', {'questions': Questions(self.questions)}
-        print 'stats: %d question%s found.' % (len(self.questions), 's' if len(self.questions) != 1 else '')
-
-        for question in self.questions:
-            print question
-            #~ print 'stats: stem is %d bytes long, %d option%s found.' % (
-                #~ len(question.stem),
-                #~ len(question.options),
-                #~ 's' if len(question.options) != 1 else ''
-                #~ )
-
     # Protected methods
     # ------------------------------------------------------------------
 
@@ -299,6 +315,9 @@ class Router(object):
             proc = Popen(command_line, stdout=PIPE, stderr=STDOUT)
             out, err = proc.communicate()
             return err if err else out
+
+        if inputfile == sys.stdin:
+            print 'Enter input (ctrl-D on a blank line to end)'
 
         return inputfile.read()
 
@@ -314,7 +333,7 @@ class Router(object):
     def _get_parser(self, string=''):
         """
         This tries to use some rudimentary intelligence to determine which
-        parser to choose based on how many questsions it parses out giving
+        parser to choose based on how many questions it parses out giving
         extra weight to a uniform distribution of options.
 
         @param  string  string  The input string for the parsers to parse
@@ -332,7 +351,7 @@ class Router(object):
         # into a hash.
         for parserclass in ('IndexParser', 'BlockParser', 'ChunkParser', 'QuestParser', 'StemsParser'):
             Parser = self.__forname("parser", parserclass)
-            self.qhash[parserclass] = Questions(Parser().parse(string))
+            self.qhash[parserclass] = Questions(Parser().parse(string).get_questions())
 
         # now look at the parser results to determine which one to use.
         # we first look for an ordered IndexParser and then for an ordered
