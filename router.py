@@ -58,11 +58,9 @@ class Router(object):
     def __str__(self):
         infile = self.options.inputfile
         tokens = self.parser.get_tokens() if self.parser else []
-
-        if self.options.safety:
-            f = self.PrettyPrinter.pformat
-        else:
-            f = str
+        toklen = 72 if self.options.stats < 3 else 999
+        f      = self.PrettyPrinter.pformat if self.options.safety else str
+        questions = ['%s question %d' % (self.questions[i], i+1) for i in range(0, len(self.questions))] if self.options.stats > 1 else []
 
         return '''<%s.%s, questions=%d>
 %s
@@ -93,9 +91,9 @@ tokens: %s
             f(self.filters),
 # parser
             f(str(self.parser)),
-            f(['%-80s token %2d' % (tokens[i][0:72], i+1) for i in range(0, len(tokens))]),
+            f(['%-80s token %2d' % (tokens[i][0:toklen], i+1) for i in range(0, len(tokens))]),
             f({'questions': Questions(self.questions)}),
-            '\n'.join(['%s question %d' % (self.questions[i], i+1) for i in range(0, len(self.questions))]),
+            '\n'.join(questions),
             )
 
     # Public methods

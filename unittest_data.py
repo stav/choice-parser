@@ -19,7 +19,6 @@ class TestChoiceData(unittest.TestCase):
 
     def test_drivers(self):
         self.router.load(['-i', 'input/drivers'])
-        self.assertTrue(isinstance(self.router.parser, BlockParser))
         self.assertEqual(len(self.router.questions), 11)
 
     def test_reading(self):
@@ -57,6 +56,14 @@ class TestChoiceData(unittest.TestCase):
     def test_motorcycle(self):
         self.router.load(['-i', 'input/motorcycle'])
         self.assertEqual(len(self.router.questions), 10)
+
+    def test_vocabulary(self):
+        self.router.load(['-i', 'input/vocabulary.pdf'])
+        self.assertEqual(len(self.router.questions), 6)
+
+    def test_pharmacology(self):
+        self.router.load('-i input/pharmacology.pdf -m SplitstemMogrifyer'.split())
+        self.assertTrue(len(self.router.questions) > 250)
 
 def suite():
     suite = unittest.TestSuite()

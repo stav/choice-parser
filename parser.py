@@ -54,12 +54,12 @@ class Parser(object):
         @param  string  The input string
         @return  list  The tokenized input
         """
-        a = '(?:A\.?|\(A\))'
-        b = '(?:B\.?|\(B\))'
-        c = '(?:C\.?|\(C\))'
-        d = '(?:D\.?|\(D\))'
-        e = '(?:E\.?|\(E\))'
-        l = '[^\n\r]*\n\s*'
+        a = '(?:a\.?|\(?a\))'
+        b = '(?:b\.?|\(?b\))'
+        c = '(?:c\.?|\(?c\))'
+        d = '(?:d\.?|\(?d\))'
+        e = '(?:e\.?|\(?e\))'
+        l = '.*\s*'
         s = '\s+'
         regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})(?:{e}.*)?)".format(
             a=a, b=b, c=c, d=d, e=e, line=l, s=s
@@ -282,9 +282,9 @@ class ChunkParser (Parser):
         self._get_tokens = self._chunk
 
     def parse(self, string):
-        re_index  = r'(?:[A-Za-z]\.?|\([A-Za-z]\))'
-        re_body   = r'[^\n]+'
-        re_option = r'(\s*{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
+        re_index  = r'(?:[A-Za-z]\.?|\(?[A-Za-z]\))'
+        re_body   = r'.+'
+        re_option = r'(\n+{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
         chunks = self._get_tokens(string)
 
         # spin thru the input chunks two at a time, the first being the

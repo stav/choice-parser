@@ -70,7 +70,7 @@ class SplitstemMogrifyer (object):
             a1 =option_index_with_dot,
             a2 =option_index_without_dot,
             )
-        re_stem = re.compile(regex, re.MULTILINE | re.DOTALL)
+        re_stem = re.compile(regex, re.IGNORECASE | re.DOTALL)
 
         a =    r'(\(?[Aa](?:\.|\))\s*.*?\n)'
         b =    r'(\(?[Bb](?:\.|\))\s*.*?\n)'
