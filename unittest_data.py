@@ -23,12 +23,10 @@ class TestChoiceData(unittest.TestCase):
 
     def test_reading(self):
         self.router.load(['-i', 'input/reading'])
-        self.assertTrue(isinstance(self.router.parser, IndexParser))
         self.assertEqual(len(self.router.questions), 15)
 
     def test_writing(self):
         self.router.load(['-i', 'input/writing'])
-        self.assertTrue(isinstance(self.router.parser, IndexParser))
         self.assertEqual(len(self.router.questions), 10)
 
     def test_choices(self):

@@ -57,10 +57,10 @@ class Router(object):
 
     def __str__(self):
         infile = self.options.inputfile
-        tokens = self.parser.get_tokens() if self.parser else []
-        toklen = 72 if self.options.stats < 3 else 999
-        f      = self.PrettyPrinter.pformat if self.options.safety else str
-        questions = ['%s question %d' % (self.questions[i], i+1) for i in range(0, len(self.questions))] if self.options.stats > 1 else []
+        tokens = self.parser.get_tokens() if self.parser and self.options.stats > 2 else []
+        toklen = 72 if self.options.stats < 4 else 999
+        f      = self.PrettyPrinter.pformat if self.options.stats > 1 else str
+        questions = ['%s question %d' % (self.questions[i], i+1) for i in range(0, len(self.questions))] if self.options.stats > 4 else []
 
         return '''<%s.%s, questions=%d>
 %s
@@ -91,7 +91,7 @@ tokens: %s
             f(self.filters),
 # parser
             f(str(self.parser)),
-            f(['%-80s token %2d' % (tokens[i][0:toklen], i+1) for i in range(0, len(tokens))]),
+            f(['%-80s token %2d' % (tokens[i][0:toklen] + ('...' if len(tokens[i]) > toklen else ''), i+1) for i in range(0, len(tokens))]),
             f({'questions': Questions(self.questions)}),
             '\n'.join(questions),
             )
@@ -121,7 +121,7 @@ tokens: %s
 
         command_line.add_argument('-s', '--stats', nargs='?', metavar='SLVL',
                             type=int, default=0, const=1,
-                            help='stats print level: 1, 2, 3 (3=most)')
+                            help='stats print level: 1, 2, 3, 4, 5 (5=most)')
 
         command_line.add_argument('-q', '--qualify', action='store_true',
                             help='Qualify the output with the question parts') # e.g. "stem = ...."
@@ -155,9 +155,6 @@ tokens: %s
         # 'foo , bar' ==>> ['foo', 'bar']
         self.options.filters    = [f.strip() for f in self.options.filters.split(',')   ] if self.options.filters    else []
         self.options.mogrifyers = [m.strip() for m in self.options.mogrifyers.split(',')] if self.options.mogrifyers else []
-
-        # stats level two forces parsers to retain their data
-        self.options.safety = True if self.options.stats > 1 else False
 
     def load(self, options=sys.argv[1:]):
         """
@@ -235,15 +232,15 @@ tokens: %s
         >>> print r.questions[0].stem
         This is the stem
         """
-        try:
-            if string:
-                self.parser = self._get_parser(string)
-                self.parser.parse(string)
-                self.questions = self.parser.get_questions()
+        #~ try:
+        if string:
+            self.parser = self._get_parser(string)
+            self.parser.parse(string)
+            self.questions = self.parser.get_questions()
 
-        except AttributeError:
-            sys.stderr.write("Could not parse input. ")
-            print sys.exc_info()[1]
+        #~ except AttributeError:
+            #~ sys.stderr.write("Could not parse input. ")
+            #~ print sys.exc_info()[1]
 
     def filter(self):
         """
@@ -343,7 +340,7 @@ tokens: %s
         <parser.IndexParser object at...
         """
         if self.options.parser:
-            return self.__forname("parser", self.options.parser)(self.options.safety)
+            return self.__forname("parser", self.options.parser)()
 
         # run all the parsers for the input string and load the results
         # into a hash.
@@ -375,7 +372,7 @@ tokens: %s
         else:
             parser = 'SingleParser'
 
-        return self.__forname("parser", parser)(self.options.safety)
+        return self.__forname("parser", parser)()
 
     def _get_filters(self):
         for filter in self.options.filters:
