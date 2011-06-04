@@ -10,7 +10,6 @@ class Parser(object):
     tokens to determine what is the stem and what are the options.
     """
     def __init__(self):
-        self._get_tokens = self._tokenize
         self._questions  = []
         self._tokens     = []
 
@@ -85,7 +84,8 @@ class Parser(object):
         """
         pass
 
-    def get_questions(self):
+    @property
+    def questions(self):
         """
         Return the parsed questions list.
 
@@ -93,9 +93,10 @@ class Parser(object):
         """
         return self._questions
 
-    def get_tokens(self):
+    @property
+    def tokens(self):
         """
-        Return the tokenized string list
+        Return the tokenized string list.
 
         @return  list  The tokens
         """
@@ -113,7 +114,7 @@ class SingleParser (Parser):
     ... This is the second option
     ... '''
     >>> p = SingleParser().parse(i)
-    >>> q = p.get_questions()
+    >>> q = p.questions
     >>> assert len(q) == 1
     >>> assert len(q[0].options) == 2
     """
@@ -121,7 +122,7 @@ class SingleParser (Parser):
         super(SingleParser, self).__init__()
 
     def parse(self, string):
-        self._get_tokens(string)
+        self._tokenize(string)
         if not self._tokens: return self
 
         question = Question()
@@ -143,7 +144,7 @@ class IndexParser (Parser):
     >>> r.setup(['-i', 'input/anarchy'])
     >>> i = r.get_input()
     >>> p = IndexParser().parse(i)
-    >>> len(p.get_questions())
+    >>> len(p.questions)
     10
     """
     def __init__(self):
@@ -151,7 +152,7 @@ class IndexParser (Parser):
 
     def parse(self, string):
         question = None
-        self._get_tokens(string)
+        self._tokenize(string)
         for token in self._tokens:
             s = re.match(r"^\s*\d+\.\s", token)
             if s and s.group():
@@ -186,7 +187,7 @@ class BlockParser (Parser):
     >>> r.setup(['-i', 'input/drivers'])
     >>> i = r.get_input()
     >>> p = BlockParser().parse(i)
-    >>> len(p.get_questions())
+    >>> len(p.questions)
     11
     """
     def __init__(self):
@@ -196,7 +197,7 @@ class BlockParser (Parser):
         question = Question()
         option = False
 
-        self._get_tokens(string)
+        self._tokenize(string)
         for token in self._tokens:
             o = re.match(r"^\s*[a-zA-Z][.)] ", token)
             if o and o.group():
@@ -243,7 +244,7 @@ class ChunkParser (Parser):
     ... D.     Stem
     ... '''
     >>> p = ChunkParser().parse(i)
-    >>> q = p.get_questions()
+    >>> q = p.questions
     >>> len(q)
     1
     >>> len(q[0].options)
@@ -251,13 +252,13 @@ class ChunkParser (Parser):
     """
     def __init__(self):
         super(ChunkParser, self).__init__()
-        self._get_tokens = self._chunk
+        self._tokenize = self._chunk
 
     def parse(self, string):
         re_index  = r'(?:[A-Za-z]\.?|\(?[A-Za-z]\))'
         re_body   = r'.+'
         re_option = r'(\n+{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
-        self._get_tokens(string)
+        self._tokenize(string)
 
         # spin thru the input chunks two at a time, the first being the
         # stem, presumably, and the second being the option group
@@ -289,7 +290,7 @@ class QuestParser (Parser):
     ... C: Acid-fast bacilli D: Gram-positive cocci
     ... '''
     >>> p = QuestParser().parse(i)
-    >>> q = p.get_questions()
+    >>> q = p.questions
     >>> len(q)
     1
     >>> len(q[0].options)
@@ -307,7 +308,7 @@ class QuestParser (Parser):
 
     def __init__(self):
         super(QuestParser, self).__init__()
-        self._get_tokens = self._quest
+        self._tokenize = self._quest
 
     def _format(self, regex):
         return regex.format(
@@ -340,7 +341,7 @@ class QuestParser (Parser):
     def parse(self, string):
         regex = self._format(r"({i}{w}{body})({a}{w}{body})({b}{w}{body})({c}{w}{body})({d}{w}{body})?({e}{w}{body})?{lb}")
 
-        self._get_tokens(string)
+        self._tokenize(string)
         for token in [t.strip() for t in self._tokens if t]:
             question = Question()
             match = re.search(regex, token, re.DOTALL | re.IGNORECASE)
@@ -369,13 +370,13 @@ class StemsParser (Parser):
     ... Is the best way to slow down when the streets are wet.
     ... '''
     >>> p = StemsParser().parse(i)
-    >>> q = p.get_questions()
+    >>> q = p.questions
     >>> assert len(q) == 1
     >>> assert len(q[0].options) == 3
     """
     def __init__(self):
         super(StemsParser, self).__init__()
-        self._get_tokens = self._stemify
+        self._tokenize = self._stemify
 
     def parse(self, string):
         si = r'[0-9]+\.\s+'
@@ -386,7 +387,7 @@ class StemsParser (Parser):
             )
 
         #import pdb; pdb.set_trace()
-        self._get_tokens(string)
+        self._tokenize(string)
         for token in self._tokens:
             question = Question()
             match = re.search(regex, token, re.DOTALL)

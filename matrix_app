@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+The Matrix application runs all of the known parsers thru all the file
+found in the input directory and displays performance statistics for
+each.
+"""
+
+import os, sys
+
+from router import Router
+
+# https://wiki.archlinux.org/index.php/Color_Bash_Prompt
+Yellow = chr(27) + '[0;33m'
+White  = chr(27) + '[0;37m'
+Green  = chr(27) + '[0;32m'
+IGreen = chr(27) + '[0;92m'
+
+def color(q):
+    string = str(q)
+    color = White
+    if 'o' in string:
+        color = IGreen
+    elif 's' in string:
+        color = Yellow
+
+    return '%s%s%s' % (color, string, White)
+
+if __name__ == "__main__":
+    relpath = os.path.dirname(sys.argv[0])        
+    abspath = os.path.abspath(relpath)
+    inppath = os.path.join(abspath, 'input')
+    print inppath
+    print os.listdir(inppath)
+
+    matrix = []
+
+    for input_file in os.listdir(inppath):
+        r = Router()
+        r.load(['-i', os.path.join(inppath, input_file)])
+        matrix.append(r)
+
+        print input_file, r
+
+    print '%-50s %-11s %-11s %-11s %-11s %-11s' % ('input file name', 'Stems', 'Block', 'Index', 'Chunk', 'Quest')
+
+    for router in matrix:
+        print '%-50s %-25s %-25s %-25s %-25s %-25s' % (
+            router.options.inputfile.name,
+            color(router.qhash['StemsParser']),
+            color(router.qhash['BlockParser']),
+            color(router.qhash['IndexParser']),
+            color(router.qhash['ChunkParser']),
+            color(router.qhash['QuestParser']),
+            )

@@ -32,12 +32,7 @@ class Router(object):
     # Properties
     # ------------------------------------------------------------------
 
-    # Property: version
-    # Router version
     version = '0.1'
-
-    # Property: develenv
-    # Development enviroment
     develenv = 'Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24) [GCC 4.5.2] on linux2'
 
     # Constructor
@@ -57,7 +52,7 @@ class Router(object):
 
     def __str__(self):
         infile = self.options.inputfile
-        tokens = self.parser.get_tokens() if self.parser and self.options.stats > 2 else []
+        tokens = self.parser.tokens if self.parser and self.options.stats > 2 else []
         toklen = 72 if self.options.stats < 4 else 999
         f      = self.PrettyPrinter.pformat if self.options.stats > 1 else str
         questions = ['%s question %d' % (self.questions[i], i+1) for i in range(0, len(self.questions))] if self.options.stats > 4 else []
@@ -232,15 +227,16 @@ tokens: %s
         >>> print r.questions[0].stem
         This is the stem
         """
-        #~ try:
-        if string:
-            self.parser = self._get_parser(string)
-            self.parser.parse(string)
-            self.questions = self.parser.get_questions()
+        try:
+            if string:
+                self.parser = self._get_parser(string)
+                self.parser.parse(string)
+                self.questions = self.parser.questions
 
-        #~ except AttributeError:
-            #~ sys.stderr.write("Could not parse input. ")
-            #~ print sys.exc_info()[1]
+        except AttributeError:
+            print "Could not parse input.",
+            print self.parser if self.parser else '',
+            print sys.exc_info()[1]
 
     def filter(self):
         """
@@ -346,7 +342,7 @@ tokens: %s
         # into a hash.
         for parserclass in ('IndexParser', 'BlockParser', 'ChunkParser', 'QuestParser', 'StemsParser'):
             Parser = self.__forname("parser", parserclass)
-            self.qhash[parserclass] = Questions(Parser().parse(string).get_questions())
+            self.qhash[parserclass] = Questions(Parser().parse(string).questions)
 
         # now look at the parser results to determine which one to use.
         # we first look for an ordered IndexParser and then for an ordered

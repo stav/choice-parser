@@ -30,7 +30,7 @@ class Questions(object):
         self.ordered = self.__is_ordered(questions)
 
     def __str__(self):
-        return self.__repr__
+        return self.__repr__()
 
     def __repr__(self):
         return '%d/%d/%s/%s' % (self.length, self.option_count, 'o' if self.ordered else '', 's' if self.symetrical else '')
