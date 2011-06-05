@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The Matrix application runs all of the known parsers thru all the file
+The Matrix application runs all of the known parsers thru all the files
 found in the input directory and displays performance statistics for
 each.
 """
-
-import os, sys
+import os
+import sys
+import argparse
 
 from router import Router
+
+options = None
 
 # https://wiki.archlinux.org/index.php/Color_Bash_Prompt
 Yellow = chr(27) + '[0;33m'
@@ -16,7 +19,26 @@ White  = chr(27) + '[0;37m'
 Green  = chr(27) + '[0;32m'
 IGreen = chr(27) + '[0;92m'
 
+def setup():
+    global options
+    # declare command-line argument parser
+    command_line = argparse.ArgumentParser(
+        description='Runs all of the parsers thru all the input files.',
+        prog=sys.argv[0],
+        )
+
+    # define the command-line arguments
+    command_line.add_argument('-s', '--stats', action='store_true',
+                        help='Show statistics')
+
+    command_line.add_argument('-c', '--color', action='store_true',
+                        help='Use bash colored output')
+
+    # load the commandline options
+    options = command_line.parse_args(sys.argv[1:])
+
 def color(q):
+    if not options.color: return q
     string = str(q)
     color = White
     if 'o' in string:
@@ -26,26 +48,30 @@ def color(q):
 
     return '%s%s%s' % (color, string, White)
 
-if __name__ == "__main__":
+def main():
+    global options
     relpath = os.path.dirname(sys.argv[0])        
     abspath = os.path.abspath(relpath)
     inppath = os.path.join(abspath, 'input')
-    print inppath
-    print os.listdir(inppath)
-
-    matrix = []
+    matrix  = []
 
     for input_file in os.listdir(inppath):
         r = Router()
         r.load(['-i', os.path.join(inppath, input_file)])
         matrix.append(r)
 
-        print input_file, r
+        if options.stats:
+            print input_file, r
+
+        if options.color:
+            data_line_format = '%-50s %-25s %-25s %-25s %-25s %-25s'
+        else:
+            data_line_format = '%-50s %-11s %-11s %-11s %-11s %-11s'
 
     print '%-50s %-11s %-11s %-11s %-11s %-11s' % ('input file name', 'Stems', 'Block', 'Index', 'Chunk', 'Quest')
 
     for router in matrix:
-        print '%-50s %-25s %-25s %-25s %-25s %-25s' % (
+        print data_line_format % (
             router.options.inputfile.name,
             color(router.qhash['StemsParser']),
             color(router.qhash['BlockParser']),
@@ -53,3 +79,7 @@ if __name__ == "__main__":
             color(router.qhash['ChunkParser']),
             color(router.qhash['QuestParser']),
             )
+
+if __name__ == "__main__":
+    setup()
+    main()

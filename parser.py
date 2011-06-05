@@ -35,29 +35,6 @@ class Parser(object):
             if token.strip() != '':
                 self._tokens.append(token)
 
-    def _chunk(self, string):
-        """
-        Split input string into tokens based on option groups.  In other
-        words we look for a group of lines that start with A, B, C and
-        maybe D and then assume the stem is the bit before each.
-
-        @param  string  The input string
-        @return  list  The tokenized input
-        """
-        a = '(?:a\.?|\(?a\))'
-        b = '(?:b\.?|\(?b\))'
-        c = '(?:c\.?|\(?c\))'
-        d = '(?:d\.?|\(?d\))'
-        e = '(?:e\.?|\(?e\))'
-        l = '.*\s*'
-        s = '\s+'
-        regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})(?:{e}.*)?)".format(
-            a=a, b=b, c=c, d=d, e=e, line=l, s=s
-            )
-        p = re.compile(regex, re.IGNORECASE)
-
-        self._tokens = p.split(string)
-
     def _stemify(self, string):
         """
         Look for the stems and everything in between must be the options.
@@ -254,6 +231,29 @@ class ChunkParser (Parser):
         super(ChunkParser, self).__init__()
         self._tokenize = self._chunk
 
+    def _chunk(self, string):
+        """
+        Split input string into tokens based on option groups.  In other
+        words we look for a group of lines that start with A, B, C and
+        maybe D and then assume the stem is the bit before each.
+
+        @param  string  The input string
+        @return  list  The tokenized input
+        """
+        a = '\**\s*(?:a\.?|\(?a\))'
+        b = '\**\s*(?:b\.?|\(?b\))'
+        c = '\**\s*(?:c\.?|\(?c\))'
+        d = '\**\s*(?:d\.?|\(?d\))'
+        e = '\**\s*(?:e\.?|\(?e\))'
+        l = '.*\s*'
+        s = '\s+'
+        regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})(?:{e}.*)?)".format(
+            a=a, b=b, c=c, d=d, e=e, line=l, s=s
+            )
+        p = re.compile(regex, re.IGNORECASE)
+
+        self._tokens = p.split(string)
+
     def parse(self, string):
         re_index  = r'(?:[A-Za-z]\.?|\(?[A-Za-z]\))'
         re_body   = r'.+'
@@ -270,7 +270,7 @@ class ChunkParser (Parser):
                 question.stem = stem.group().strip()
 
                 if op_index < len(self._tokens):
-                    options = [o.strip() for o in re.split(re_option, self._tokens[op_index]) if o]
+                    options = (o.strip() for o in re.split(re_option, self._tokens[op_index]) if o)
                     for option in options:
                         question.options.append(option)
 
