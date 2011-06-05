@@ -3,7 +3,7 @@
 """
 The Matrix application runs all of the known parsers thru all the files
 found in the input directory and displays performance statistics for
-each.
+each one.
 """
 import os
 import sys
@@ -49,7 +49,6 @@ def color(q):
     return '%s%s%s' % (color, string, White)
 
 def main():
-    global options
     relpath = os.path.dirname(sys.argv[0])        
     abspath = os.path.abspath(relpath)
     inppath = os.path.join(abspath, 'input')
@@ -61,7 +60,8 @@ def main():
         matrix.append(r)
 
         if options.stats:
-            print input_file, r
+            sys.stderr.write(input_file + '\n')
+            sys.stderr.write(str(r) + '\n')
 
         if options.color:
             data_line_format = '%-50s %-25s %-25s %-25s %-25s %-25s'
@@ -71,14 +71,15 @@ def main():
     print '%-50s %-11s %-11s %-11s %-11s %-11s' % ('input file name', 'Stems', 'Block', 'Index', 'Chunk', 'Quest')
 
     for router in matrix:
-        print data_line_format % (
-            router.options.inputfile.name,
-            color(router.qhash['StemsParser']),
-            color(router.qhash['BlockParser']),
-            color(router.qhash['IndexParser']),
-            color(router.qhash['ChunkParser']),
-            color(router.qhash['QuestParser']),
-            )
+        if router.options:
+            print data_line_format % (
+                router.options.inputfile.name,
+                color(router.qhash.get('StemsParser',' '*11)),
+                color(router.qhash.get('BlockParser',' '*11)),
+                color(router.qhash.get('IndexParser',' '*11)),
+                color(router.qhash.get('ChunkParser',' '*11)),
+                color(router.qhash.get('QuestParser',' '*11)),
+                )
 
 if __name__ == "__main__":
     setup()

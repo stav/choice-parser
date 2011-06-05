@@ -162,14 +162,20 @@ tokens: %s
         >>> len(r.questions)
         1
         """
-        self.setup(options)
+        try:
+            self.setup(options)
 
-        self.parse (self.mogrify (self.get_input ()))
+        except SystemExit:
+            #~ self.__error(("Could not setup input.", options, sys.exc_info()))
+            pass
 
-        self.filter()
+        else:
+            self.parse (self.mogrify (self.get_input ()))
 
-        if self.options.stats:
-            print self
+            self.filter()
+
+            if self.options.stats:
+                print self
 
     def start(self, options=sys.argv[1:]):
         """
@@ -233,10 +239,8 @@ tokens: %s
                 self.parser.parse(string)
                 self.questions = self.parser.questions
 
-        except AttributeError:
-            print "Could not parse input.",
-            print self.parser if self.parser else '',
-            print sys.exc_info()[1]
+        except (AttributeError, OverflowError):
+            self.__error(("Could not parse input.", self.parser, sys.exc_info()[1]))
 
     def filter(self):
         """
@@ -342,7 +346,12 @@ tokens: %s
         # into a hash.
         for parserclass in ('IndexParser', 'BlockParser', 'ChunkParser', 'QuestParser', 'StemsParser'):
             Parser = self.__forname("parser", parserclass)
-            self.qhash[parserclass] = Questions(Parser().parse(string).questions)
+            try:
+                questions = Questions(Parser().parse(string).questions)
+            except OverflowError:
+                questions = Questions([])
+            self.qhash[parserclass] = questions
+                
 
         # now look at the parser results to determine which one to use.
         # we first look for an ordered IndexParser and then for an ordered
@@ -409,3 +418,13 @@ tokens: %s
 
         except AttributeError:
             raise
+
+    def __error(self, errors):
+        """
+        Writes errors to standard error
+        """
+        for e in (e for e in errors if e):
+            sys.stderr.write(str(e))
+            sys.stderr.write(' ')
+
+        sys.stderr.write('\n')

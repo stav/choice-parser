@@ -63,6 +63,14 @@ class TestChoiceData(unittest.TestCase):
         self.router.load('-i input/pharmacology.pdf -m SplitstemMogrifyer'.split())
         self.assertTrue(len(self.router.questions) > 250)
 
+    def test_regulation(self):
+        self.router.load(['-i', 'input/regulation.pdf'])
+        self.assertEqual(len(self.router.questions), 20)
+
+    def test_accounting(self):
+        self.router.load(['-i', 'input/accounting.txt'])
+        self.assertTrue(len(self.router.questions) > 300)
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestChoiceData))

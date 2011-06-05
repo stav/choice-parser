@@ -9,6 +9,8 @@ class Parser(object):
     The parser breaks up a string into tokens and then looks through those
     tokens to determine what is the stem and what are the options.
     """
+    maxlen = 100000
+    
     def __init__(self):
         self._questions  = []
         self._tokens     = []
@@ -59,7 +61,8 @@ class Parser(object):
         @param  string  The input string to parse
         @return  Parser  Enable method chaining
         """
-        pass
+        if len(string) > self.maxlen:
+            raise OverflowError, 'String of %d bytes is too long, %d max' % (len(string), self.maxlen)
 
     @property
     def questions(self):
@@ -265,7 +268,8 @@ class ChunkParser (Parser):
         for st_index in range(0, len(self._tokens), 2):
             op_index = st_index +1
             question = Question()
-            stem = re.search(r"\n*(.+)$", self._tokens[st_index])
+            stem = re.search(r"\n*((?:[0-9]*\s*).+)$", self._tokens[st_index])
+            #~ stem = re.search(r"(?:[0-9]+\s+(?:.|\n)+$)+?|(?:\n*.+$)", self._tokens[st_index])
             if stem:
                 question.stem = stem.group().strip()
 
@@ -334,11 +338,10 @@ class QuestParser (Parser):
         regex = self._format(r"({i}{w}{body}{a}{w}{body}{b}{w}{body}{c}{w}{body}(?:{d}{w}{body})?(?:{e}{w}{body})?(?={i}{w}))")
         p = re.compile(regex, re.DOTALL | re.IGNORECASE)
 
-        self._tokens = p.split(string) # re.IGNORECASE doesn't really work unless you re.compiles it
-
-        #~ if self._tokens is None: self._tokens = []
+        self._tokens = p.split(string) # re.IGNORECASE doesn't really work unless you re.compile it
 
     def parse(self, string):
+        super(QuestParser, self).parse(string)
         regex = self._format(r"({i}{w}{body})({a}{w}{body})({b}{w}{body})({c}{w}{body})({d}{w}{body})?({e}{w}{body})?{lb}")
 
         self._tokenize(string)
@@ -379,6 +382,7 @@ class StemsParser (Parser):
         self._tokenize = self._stemify
 
     def parse(self, string):
+        super(StemsParser, self).parse(string)
         si = r'[0-9]+\.\s+'
         sb = r'.+?[?:.]\n\n'
         o  = r'.+'
