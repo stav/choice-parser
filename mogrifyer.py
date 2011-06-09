@@ -99,7 +99,6 @@ class SplitstemMogrifyer (object):
         m3 = match.group(3) if match.group(3) else ''
 
         ret = '\n%s%s%s' % (m1, m2, m3)
-        #print ret; import pdb; pdb.set_trace()
         return ret
 
     def __yank_newlines_from_options(self, match):
@@ -111,5 +110,4 @@ class SplitstemMogrifyer (object):
         m5 = match.group(5).replace('\n', ' ').strip() + '\n'
 
         ret = '%s%s%s%s%s' % (m1, m2, m3, m4, m5)
-        #print ret; import pdb; pdb.set_trace()
         return ret

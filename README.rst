@@ -1,4 +1,4 @@
-
+===========================
 Multiple Choice Test Parser
 ===========================
 
@@ -25,3 +25,20 @@ Project designed by `Greg Dingle <https://github.com/gregdingle>`_
     Getting more general, it would be great to have the ability to parse tests hosted on other sites in HTML format. See http://dmv.ca.gov/pubs/interactive/tdrive/clm1written.htm for an example.
 
     Finally, I'd like to make the core algorithm of this project an open source project so others who have the same need can benefit. I see this as a benefit to any developer on the project also since they would get their name promoted.
+
+Installation
+============
+
+Two External components are used to convert Portable Document Format (PDF) files to plain text for consumption buy the parsers.  Either component will work and both will be used if available offering better odds of successful parsing.  If neither component is available, PDF files will not be processed.
+
+PdfToText
+---------
+
+``pdftotext`` is part of the `Xpdf <http://www.foolabs.com/xpdf/>`_ software suite.  On most Linux distributions pdftotext is included as part of the `poppler-utils package <http://poppler.freedesktop.org/>`_.  Xpdf runs under the X Window System on UNIX, VMS, and OS/2. The non-X components (pdftops, pdftotext, etc.) also run on Win32 systems and should run on pretty much any system with a decent C++ compiler.
+
+PyPdf
+-----
+
+``pyPdf`` from Mathieu Fenniak is a Pure-Python library built as a PDF toolkit.
+
+http://pybrary.net/pyPdf/

@@ -3,3 +3,4 @@ doc
 *.pyc
 *~
 pyparsing
+pyPdf

@@ -11,6 +11,7 @@ class Writer(object):
 
     def __init__(self):
         self.extension = ''
+        self.question_separator = ''
 
     def write(self):
         pass
@@ -38,16 +39,24 @@ class TextWriter (Writer):
 
     def __init__(self):
         super(TextWriter, self).__init__()
-        self.question_separator = ''
 
     def write(self, output, questions):
         super(TextWriter, self).write()
 
         for question in questions:
-            output.writelines((self.question_separator, question.stem, '\n'))
+            output.writelines((
+                self.question_separator,
+                #~ unicode(question.stem).encode('unicode_escape'),
+                question.stem,
+                '\n'))
 
             for option in question.options:
                 output.writelines((option, '\n'))
+                #~ print ('\n\nasdf:', type(option), len(option), '\nqwer:', unicode(option).encode('unicode_escape'), '\nzxcv:', option)
+                #~ try:
+                    #~ output.writelines((option.decode('utf-8', 'replace'), '\n'))
+                #~ except TypeError:
+                    #~ import pdb; pdb.set_trace()
 
             output.write('\n')
 
@@ -55,7 +64,8 @@ class TextWriter (Writer):
 class STextWriter (TextWriter):
     """
     The separated text writer uses the TextWriter to write text with the
-    questions separated by stars.
+    questions separated by stars so that it's easier to see where each
+    question starts and ends if the data is a little murky.
 
     >>> import sys
     >>> from question import Question
@@ -64,9 +74,8 @@ class STextWriter (TextWriter):
     >>> q.options.append('a. A choice-parser component.')
     >>> q.options.append('b. A Writer class.')
     >>> q.options.append('c. Both of the above.')
-    >>> w = STextWriter()
-    >>> w.write(sys.stdout, [q])
-    *********************************
+    >>> STextWriter().write(sys.stdout, [q])
+    ****************************************
     1. What is the STextWriter?
     a. A choice-parser component.
     b. A Writer class.
@@ -75,7 +84,7 @@ class STextWriter (TextWriter):
 
     def __init__(self):
         super(STextWriter, self).__init__()
-        self.question_separator = '\n*********************************\n'
+        self.question_separator = '\n%s\n' % ('*'*40,)
 
 ########################################################################
 class JsonWriter (Writer):

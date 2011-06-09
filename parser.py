@@ -16,7 +16,7 @@ class Parser(object):
         self._tokens     = []
 
     def __str__(self):
-        return '<%s.%s tokens=%d, questions=%d>' % (
+        return "<%s.%s tokens=%d, questions=%d>" % (
             __name__,
             self.__class__.__name__,
             len(self._tokens),
@@ -67,7 +67,7 @@ class Parser(object):
     @property
     def questions(self):
         """
-        Return the parsed questions list.
+        Read-only attribute for the parsed questions.
 
         @return  list  The parsed questions
         """
@@ -76,7 +76,7 @@ class Parser(object):
     @property
     def tokens(self):
         """
-        Return the tokenized string list.
+        read-only attribute for the tokenized strings.
 
         @return  list  The tokens
         """
@@ -121,18 +121,25 @@ class IndexParser (Parser):
 
     >>> from router import Router
     >>> r = Router()
-    >>> r.setup(['-i', 'input/anarchy'])
-    >>> i = r.get_input()
-    >>> p = IndexParser().parse(i)
-    >>> len(p.questions)
-    10
+    >>> i = '''3. What is the name of the part that contains the question?
+    ... A.     Multiple
+    ... B.     Choice
+    ... C.     Problem
+    ... D.     Stem
+    ... '''
+    >>> q = IndexParser().parse(i).questions
+    >>> assert len(q) == 1
+    >>> assert len(q[0].options) == 4
     """
     def __init__(self):
         super(IndexParser, self).__init__()
 
+    #~ (Pdb) for i in range(len(self.tokens)): print '\n%s %d\n'%('*'*40, i), self.tokens[i]
+
     def parse(self, string):
         question = None
         self._tokenize(string)
+
         for token in self._tokens:
             s = re.match(r"^\s*\d+\.\s", token)
             if s and s.group():
@@ -142,14 +149,10 @@ class IndexParser (Parser):
                 question.stem = token
                 continue
 
-            o = re.match(r"^\s*[a-zA-Z][.):]\s", token)
-            if o and o.group():
-                try:
-                    assert question is not None
+            if question is not None:
+                o = re.match(r"^\s*[a-zA-Z][.):]\s", token)
+                if o and o.group():
                     question.options.append(token)
-
-                except AssertionError:
-                    pass
 
         if question and len(question.options) > 0:
             self._questions.append(question)
@@ -166,7 +169,7 @@ class BlockParser (Parser):
     >>> r = Router()
     >>> r.setup(['-i', 'input/drivers'])
     >>> i = r.get_input()
-    >>> p = BlockParser().parse(i)
+    >>> p = BlockParser().parse(i[0])
     >>> len(p.questions)
     11
     """
@@ -238,47 +241,64 @@ class ChunkParser (Parser):
         """
         Split input string into tokens based on option groups.  In other
         words we look for a group of lines that start with A, B, C and
-        maybe D and then assume the stem is the bit before each.
+        maybe D and E, then assume the stems are the bits between the
+        option groups.
+
+        ..note: There is no way to determine when the last option has
+        ended in this particular parser which only looks for the option
+        sets.  We can't be certain if the the following lines are part
+        of the option or part of the next question.  Therefore we cut
+        the last option off at the first linefeed, which may, and will
+        truncate the last option if it indeed contains linefeeds
+
+        ..note: Also of note is that if there are only four options:
+        a, b, c, d - then the fourth option will be only one character
+        long since it is using non-greedy dot matching.
+
+        @todo Take the **** at the beginning of an option, to denote the
+        correct answer.
 
         @param  string  The input string
         @return  list  The tokenized input
         """
-        a = '\**\s*(?:a\.?|\(?a\))'
-        b = '\**\s*(?:b\.?|\(?b\))'
-        c = '\**\s*(?:c\.?|\(?c\))'
-        d = '\**\s*(?:d\.?|\(?d\))'
-        e = '\**\s*(?:e\.?|\(?e\))'
-        l = '.*\s*'
-        s = '\s+'
-        regex = r"(\s*{a}{s}{line}{b}{s}{line}{c}{s}{line}(?:{d}{s}{line})(?:{e}.*)?)".format(
-            a=a, b=b, c=c, d=d, e=e, line=l, s=s
+        #~ a = r'\**\s*(?:a\.?|\(?a\))' #SMA option dot now required
+        a = r'\**\s*(?:a\.|\(?a\))'
+        b = r'\**\s*(?:b\.|\(?b\))'
+        c = r'\**\s*(?:c\.|\(?c\))'
+        d = r'\**\s*(?:d\.|\(?d\))'
+        e = r'\**\s*(?:e\.|\(?e\))'
+        l = r'\s+.+?\s+'
+        #                                    last option trucated here \/
+        regex = r"({a}{line}{b}{line}{c}{line}(?:{d}{line})(?:{e}.*?)?)\n?".format(
+            a=a, b=b, c=c, d=d, e=e, line=l, 
             )
-        p = re.compile(regex, re.IGNORECASE)
+        p = re.compile(regex, re.IGNORECASE | re.DOTALL)
 
         self._tokens = p.split(string)
 
     def parse(self, string):
-        re_index  = r'(?:[A-Za-z]\.?|\(?[A-Za-z]\))'
+        re_index  = r'\**\s*(?:[A-Ea-e]\.|\(?[A-Ea-e]\))'
         re_body   = r'.+'
-        re_option = r'(\n+{index}\s+{body}\s*)'.format(index=re_index, body=re_body)
+        re_option = r'({index}\s+{body})'.format(index=re_index, body=re_body)
         self._tokenize(string)
 
         # spin thru the input chunks two at a time, the first being the
         # stem, presumably, and the second being the option group
         for st_index in range(0, len(self._tokens), 2):
             op_index = st_index +1
-            question = Question()
-            stem = re.search(r"\n*((?:[0-9]*\s*).+)$", self._tokens[st_index])
-            #~ stem = re.search(r"(?:[0-9]+\s+(?:.|\n)+$)+?|(?:\n*.+$)", self._tokens[st_index])
-            if stem:
-                question.stem = stem.group().strip()
+            if op_index < len(self._tokens):
+                question = Question()
 
-                if op_index < len(self._tokens):
-                    options = (o.strip() for o in re.split(re_option, self._tokens[op_index]) if o)
-                    for option in options:
-                        question.options.append(option)
+                stem = re.search(r'[0-9]+(?:\.|\s).+$', self._tokens[st_index], re.DOTALL)
+                #~ stem = re.search(r"\n*((?:[0-9]*\.*\s*).+)$", self._tokens[st_index], re.DOTALL)
+                #~ stem = re.search(r"(?:[0-9]+\s+(?:.|\n)+$)+?|(?:\n*.+$)", self._tokens[st_index])
+                question.stem = stem.group().strip() if stem else self._tokens[st_index] 
 
-                    self._questions.append(question)
+                options = [o.strip() for o in re.split(re_option, self._tokens[op_index]) if o.strip()]
+                for option in options:
+                    question.options.append(option)
+
+                self._questions.append(question)
 
         return self
 
@@ -390,12 +410,10 @@ class StemsParser (Parser):
             si=si, sb=sb, o=o,
             )
 
-        #import pdb; pdb.set_trace()
         self._tokenize(string)
         for token in self._tokens:
             question = Question()
             match = re.search(regex, token, re.DOTALL)
-            #if match: print match.group(); import pdb; pdb.set_trace()
             if match:
                 question.stem = match.group(1).strip()
                 for option in match.group(2).split('\n'):
