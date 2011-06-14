@@ -9,7 +9,7 @@ import os
 import sys
 import argparse
 
-from router import Router
+from choice.router import Router
 
 options = None
 

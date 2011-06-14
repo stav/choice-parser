@@ -289,13 +289,15 @@ tokens: %s
             writer = self._get_writer()
 
         except AttributeError:
-            sys.stderr.write("Could not declare writer.")
-            print sys.exc_info()[1]
-            return
+            sys.stderr.write("Could not declare writer. ")
+            sys.stderr.write(str(sys.exc_info()[1]))
+            sys.stderr.write('\n')
 
-        writer.write(self.options.outputfile, self.questions)
+        else:
+            writer.write(self.options.outputfile, self.questions)
 
-        #self.options.outputfile.close() # only close if not stdout
+        #finally:
+            #self.options.outputfile.close() # only close if not stdout
 
     def get_input(self, inputfile=None):
         """
@@ -389,7 +391,7 @@ tokens: %s
         >>> r = Router()
         >>> r.setup(['-p', 'IndexParser'])
         >>> r._get_parser()
-        <parser.IndexParser object at...
+        <...parser.IndexParser object at...
         """
         if self.options.parser:
             return self.__forname("parser", self.options.parser)()
@@ -466,11 +468,15 @@ tokens: %s
             from http://mail.python.org/pipermail/python-list/2003-March/192221.html
               on http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
         """
+        # inject the caller's context in not from our choice module
+        if __name__ != 'router': # choice.router
+            modname = __name__.replace('router', modname) # choice.MODNAME
+
         try:
             module = __import__(modname)
-            classobj = getattr(module, classname)
+            classobj = getattr(sys.modules[modname], classname)
             return classobj
-
+    
         except AttributeError:
             raise
 

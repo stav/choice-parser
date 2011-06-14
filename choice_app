@@ -6,7 +6,7 @@ to parse it to see if it is a multiple choice test in which case it saves
 all the questions so that they can be output in various formats.
 """
 
-from router import Router
+from choice.router import Router
 
 if __name__ == "__main__":
     r = Router()

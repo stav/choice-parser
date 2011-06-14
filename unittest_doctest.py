@@ -1,11 +1,11 @@
 import unittest
 import doctest
 
-import router
-import mogrifyer
-import parser
-import filter
-import writer
+import choice.router as router
+import choice.mogrifyer as mogrifyer
+import choice.parser as parser
+import choice.filter as filter
+import choice.writer as writer
 
 class TestChoiceDoctest(unittest.TestCase):
 

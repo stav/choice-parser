@@ -1,9 +1,9 @@
 import unittest
 
-from router import Router
-from parser import IndexParser
-from parser import BlockParser
-from parser import ChunkParser
+from choice.router import Router
+from choice.parser import IndexParser
+from choice.parser import BlockParser
+from choice.parser import ChunkParser
 
 class TestChoiceData(unittest.TestCase):
 
