@@ -1,0 +1,254 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Router &mdash; Choice Parser v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Choice Parser v0.1 documentation" href="index.html" />
+    <link rel="next" title="Parser" href="parser.html" />
+    <link rel="prev" title="System" href="system.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="parser.html" title="Parser"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="system.html" title="System"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Choice Parser v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-choice.router">
+<span id="router"></span><h1>Router<a class="headerlink" href="#module-choice.router" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="choice.router.Router">
+<em class="property">class </em><tt class="descclassname">choice.router.</tt><tt class="descname">Router</tt><a class="reference internal" href="_modules/choice/router.html#Router"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router" title="Permalink to this definition">¶</a></dt>
+<dd><p>The router collects all the input data and prepares it for parsing.</p>
+<p>Method map:</p>
+<div class="highlight-python"><pre>start()
+
+    load()
+        setup()
+        get_input()
+        mogrify()
+        parse()
+        filter()
+        &lt;show stats&gt;
+
+    write()</pre>
+</div>
+<dl class="method">
+<dt id="choice.router.Router.filter">
+<tt class="descname">filter</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/choice/router.html#Router.filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router.filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load all filters specified on the command-line and apply them
+one at a time to the parsed question list.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Router</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">setup</span><span class="p">([</span><span class="s">&#39;-f&#39;</span><span class="p">,</span> <span class="s">&#39;IndexFilter&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">parse</span><span class="p">([</span><span class="s">&#39;1. This is the stem&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">questions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stem</span>
+<span class="go">1. This is the stem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">filter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">questions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stem</span>
+<span class="go"> This is the stem</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="choice.router.Router.get_input">
+<tt class="descname">get_input</tt><big>(</big><em>inputfile=None</em><big>)</big><a class="reference internal" href="_modules/choice/router.html#Router.get_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router.get_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the input from the file designated on the commad line.
+Note that if no input file is designated then the input file
+is the default standard input.</p>
+<p>&#64;param  inputfile  File  The open input file object
+&#64;return  list  The input</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Router</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">setup</span><span class="p">([</span><span class="s">&#39;&#39;&#39;This is the stem</span>
+<span class="gp">... </span><span class="s">This is an option&#39;&#39;&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">get_input</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">This is the stem</span>
+<span class="go">This is an option</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="choice.router.Router.load">
+<tt class="descname">load</tt><big>(</big><em>options=['-b', 'html', '-d', '_build/doctrees', '.', '_build/html']</em><big>)</big><a class="reference internal" href="_modules/choice/router.html#Router.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>The primary Router method to handle: setup, mogrifying, parsing and
+filtering.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Router</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s">&#39;&#39;&#39;This is the stem</span>
+<span class="gp">... </span><span class="s">This is an option&#39;&#39;&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">questions</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="choice.router.Router.mogrify">
+<tt class="descname">mogrify</tt><big>(</big><em>strings</em><big>)</big><a class="reference internal" href="_modules/choice/router.html#Router.mogrify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router.mogrify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load all mogrifiers specified on the command-line and apply them
+one at a time to the input string returning the mogrified string.
+A mogrifier takes an input string and applies some search and replace
+logic usually to massage the string into a different format: removing
+all non-printable characters, for example.</p>
+<p>&#64;param  string  string  The input string to mogrify
+&#64;return  string  The mogrified string</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mogrifyer</span> <span class="kn">import</span> <span class="n">BooleanoptionMogrifyer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Router</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">setup</span><span class="p">([</span><span class="s">&#39;-m&#39;</span><span class="p">,</span> <span class="s">&#39;BooleanoptionMogrifyer&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">mogrify</span><span class="p">([</span><span class="s">&#39;&#39;&#39;This is the stem</span>
+<span class="gp">... </span><span class="s">yes no a. This is an option&#39;&#39;&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">This is the stem</span>
+<span class="go">a. This is an option</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="choice.router.Router.parse">
+<tt class="descname">parse</tt><big>(</big><em>strings</em><big>)</big><a class="reference internal" href="_modules/choice/router.html#Router.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>The parsing is the heart of the router and here we run the protected
+method _get_parser() to determine the best parser to, instantiate
+and object instance for us which we run the parse() method on to
+retrieve our question list which we load into ourself.</p>
+<p>..note: This is doing double work if get_parser() is running all
+the parsers.</p>
+<p>&#64;param  list  strings  The input strings, possibly mogrified</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Router</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">parse</span><span class="p">([</span><span class="s">&#39;&#39;&#39;This is the stem</span>
+<span class="gp">... </span><span class="s">This is an option&#39;&#39;&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">questions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">questions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stem</span>
+<span class="go">This is the stem</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="choice.router.Router.setup">
+<tt class="descname">setup</tt><big>(</big><em>options</em><big>)</big><a class="reference internal" href="_modules/choice/router.html#Router.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router.setup" title="Permalink to this definition">¶</a></dt>
+<dd><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;--qualify&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Router</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">options</span>
+<span class="go">Namespace... qualify=True...</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="choice.router.Router.start">
+<tt class="descname">start</tt><big>(</big><em>options=['-b', 'html', '-d', '_build/doctrees', '.', '_build/html']</em><big>)</big><a class="reference internal" href="_modules/choice/router.html#Router.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads input and writes output.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Router</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">start</span><span class="p">([</span><span class="s">&#39;&#39;&#39;This is the stem</span>
+<span class="gp">... </span><span class="s">This is an option&#39;&#39;&#39;</span><span class="p">])</span>
+<span class="go">This is the stem</span>
+<span class="go">This is an option</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="choice.router.Router.write">
+<tt class="descname">write</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/choice/router.html#Router.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#choice.router.Router.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="system.html"
+                        title="previous chapter">System</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="parser.html"
+                        title="next chapter">Parser</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/router.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="parser.html" title="Parser"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="system.html" title="System"
+             >previous</a> |</li>
+        <li><a href="index.html">Choice Parser v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Steven Almeroth.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

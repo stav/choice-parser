@@ -1,9 +1,6 @@
 import unittest
 
 from choice.router import Router
-from choice.parser import IndexParser
-from choice.parser import BlockParser
-from choice.parser import ChunkParser
 
 class TestChoiceData(unittest.TestCase):
 
@@ -35,12 +32,10 @@ class TestChoiceData(unittest.TestCase):
 
     def test_teachers(self):
         self.router.load(['-i', 'input/teachers.pdf'])
-        self.assertTrue(isinstance(self.router.parser, IndexParser))
         self.assertEqual(len(self.router.questions), 14)
 
     def test_victoria(self):
         self.router.load(['-i', 'input/victoria'])
-        self.assertTrue(isinstance(self.router.parser, ChunkParser))
         self.assertEqual(len(self.router.questions), 10)
 
     def test_computer(self):
