@@ -10,7 +10,10 @@ class Question(object):
         self.options = []
 
     def __str__(self):
-        return '%-72s %4d byte stem,%2d options' % (self.stem[0:72], len(self.stem), len(self.options))
+        return repr(self)
+
+    def __repr__(self):
+        return '%-72s %4d byte stem,%2d options' % (self.stem[0:72].encode('ascii', 'replace'), len(self.stem), len(self.options))
 
     def is_valid(self):
         count = len(self.options)

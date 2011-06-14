@@ -138,6 +138,7 @@ class IndexParser (Parser):
 
     def parse(self, string):
         question = None
+        import pdb; pdb.set_trace()
         self._tokenize(string)
 
         for token in self._tokens:

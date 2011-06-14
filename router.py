@@ -46,10 +46,11 @@ class Router(object):
 
     def __init__(self):
         self.questions = []
+        self.new_questions = {}
         self.qhash     = {}
+        self.inputs    = {}
         self.options   = None
         self.parser    = None
-        self.converter = None
         self.mogrifyers= []
         self.filters   = []
         self.PrettyPrinter = pprint.PrettyPrinter(indent=4, width=72)
@@ -68,7 +69,6 @@ class Router(object):
         string = '''<%s.%s, questions=%d>
 %s
 input: %s, %s, mode %s,%s encoding %s, newlines %s
-converter: %s
 %s
 mogrifyers: %s
 filters: %s
@@ -76,6 +76,7 @@ parser: %s
 tokens: %s
 %s
 %s
+new: %s
         ''' % (
             __name__,
             self.__class__.__name__,
@@ -89,8 +90,6 @@ tokens: %s
             ' size %d,' % path.getsize(infile.name) if infile != sys.stdin else '',
             infile.encoding,
             repr(infile.newlines),
-# converter
-            f(self.converter),
 # qhash & formatters
             f(self.qhash),
             f(self.mogrifyers),
@@ -100,6 +99,7 @@ tokens: %s
             f(['%-80s token %2d' % (tokens[i][0:toklen] + ('...' if len(tokens[i]) > toklen else ''), i+1) for i in range(0, len(tokens))]),
             f({'questions': Questions(self.questions)}),
             '\n'.join(questions),
+            f(self.new_questions)
             )
 
         return unicode(string).encode('ascii', 'replace')   # replaces with ?
@@ -186,8 +186,9 @@ tokens: %s
             pass
 
         else:
-            self.parse (self.mogrify (self.get_input ()))
-
+            self.stow()
+            self.mogrify()
+            self.parse()
             self.filter()
 
             if self.options.stats:
@@ -206,16 +207,13 @@ tokens: %s
         self.load(options)
         self.write()
 
-    def mogrify(self, strings):
+    def mogrify(self):
         """
         Load all mogrifiers specified on the command-line and apply them
         one at a time to the input string returning the mogrified string.
         A mogrifier takes an input string and applies some search and replace
         logic usually to massage the string into a different format: removing
         all non-printable characters, for example.
-
-        @param  string  string  The input string to mogrify
-        @return  string  The mogrified string
 
         >>> from mogrifyer import BooleanoptionMogrifyer
         >>> r = Router()
@@ -227,15 +225,11 @@ tokens: %s
         """
         self.mogrifyers = list(self._get_mogrifyers())
 
-        new_strings = []
-        for string in strings:
+        for type in self.inputs:
             for mogrifyer in self.mogrifyers:
-                string = mogrifyer.mogrify(string)
-            new_strings.append(string)
+                self.inputs[type] = mogrifyer.mogrify(self.inputs[type])
 
-        return new_strings
-
-    def parse(self, strings):
+    def parse(self):
         """
         The parsing is the heart of the router and here we run the protected
         method _get_parser() to determine the best parser to, instantiate
@@ -245,8 +239,6 @@ tokens: %s
         ..note: This is doing double work if get_parser() is running all
         the parsers.
 
-        @param  list  strings  The input strings, possibly mogrified
-
         >>> r = Router()
         >>> r.parse(['''This is the stem
         ... This is an option'''])
@@ -254,16 +246,22 @@ tokens: %s
         >>> print r.questions[0].stem
         This is the stem
         """
-        try:
-            self.parser = self._get_parser(strings)
-            #~ import pdb; pdb.set_trace()
-            for string in strings:
-                self.parser.parse(string)
+        def listify(o):
+             return o if type(o) == list else [o]
+
+        for input_type in self.inputs:
+            strings = listify(self.inputs[input_type])
+            try:
+                self.parser = self._get_parser(strings)
+                #~ import pdb; pdb.set_trace()
+                for string in strings:
+                    self.parser.parse(string)
+
+            except (AttributeError, OverflowError, OSError):
+                self.__error(("Could not parse input.", self.parser, sys.exc_info()[1]))
 
             self.questions.extend(self.parser.questions)
-
-        except (AttributeError, OverflowError, OSError):
-            self.__error(("Could not parse input.", self.parser, sys.exc_info()[1]))
+            self.new_questions[input_type] = self.parser.questions
 
     def filter(self):
         """
@@ -297,6 +295,44 @@ tokens: %s
 
         #self.options.outputfile.close() # only close if not stdout
 
+    def stow(self):
+        if self.options.input:
+            self.inputs['command_line'] = self.options.input
+
+        if self.options.inputfile == sys.stdin:
+            print 'Enter input (ctrl-D on a blank line to end)'
+            self.inputs['stdin'] = self.options.inputfile.read()
+
+        else:
+            f = self.options.inputfile
+            if '.pdf' == f.name [len(f.name)-4:len(f.name)]:
+                self.stow_pdf()
+
+            else:
+                self.inputs[f.name] = f.read()
+
+    def stow_pdf(self):
+        if PdfFileReader:
+            contents = []
+            pdf = PdfFileReader(file(self.options.inputfile.name))
+            if not pdf.isEncrypted:
+                for i in range(0, pdf.getNumPages()):
+                    page_content = pdf.getPage(i).extractText()
+                    if page_content:
+                        contents.append(page_content)
+                #~ import pdb; pdb.set_trace()
+                if not bool([True for x in contents if '\u02dc\u02dc\u02dc\u02dc' in x]): # check if pyPdf had trouble
+                    self.inputs['pyPdf'] = contents
+
+        command_line = ['pdftotext', '-raw', self.options.inputfile.name, '-']
+        proc = Popen(command_line, stdout=PIPE, stderr=STDOUT)
+        out, err = proc.communicate()
+        if err:
+            self.__error(err)
+            raise OSError, 'The program pdftotext was not found in the path.'
+        else:
+            self.inputs['pdftotext'] = out
+
     def get_input(self, inputfile=None):
         """
         Return the input from the file designated on the commad line.
@@ -316,7 +352,7 @@ tokens: %s
         def listify(o):
              return o if type(o) == list else [o]
 
-        if self.options and self.options.input:
+        if self.options.input:
             # note: any file input is ignored
             return listify(self.options.input)
 
@@ -343,23 +379,7 @@ tokens: %s
         return inputfile.read()
 
     def _get_pdf_contents(self, inputfile):
-        # first try the pyPdf module
-        #~ if PdfFileReader:
-            #~ contents = []
-            #~ pdf = PdfFileReader(file(inputfile.name))
-            #~ if not pdf.isEncrypted:
-                #~ self.converter = pdf
-                #~ for i in range(0, pdf.getNumPages()):
-                    #~ page_content = pdf.getPage(i).extractText()
-                    #~ if page_content:
-                        #~ contents.append(page_content)
-                #~ import pdb; pdb.set_trace()
-                #~ if not bool([True for x in contents if '\u02dc\u02dc\u02dc\u02dc' in x]): # check if pyPdf had trouble
-                    #~ return contents
-
-        # fallback to the pdftotext program
         command_line = ['pdftotext', '-raw', inputfile.name, '-']
-        self.converter = command_line
         proc = Popen(command_line, stdout=PIPE, stderr=STDOUT)
         out, err = proc.communicate()
         if err:
@@ -406,7 +426,6 @@ tokens: %s
             except OverflowError:
                 questions = Questions([])
             self.qhash[parserclass] = questions
-                
 
         # now look at the parser results to determine which one to use.
         # we first look for an ordered QuestParser and then for an ordered
