@@ -17,6 +17,8 @@ Requirements
 
 * **Python**
     - 2.7
+    
+    Python 3000 is currently not supported
 
 Two External components are used to convert Portable Document Format (PDF)
 files to plain text for consumption buy the parsers.  Either component will
@@ -43,7 +45,7 @@ http://pybrary.net/pyPdf/
 Configuration
 =============
 
-No configuration file setup.
+:file:`choice/__init__.py` holds module configuration parameters.
 
 Interface
 =========

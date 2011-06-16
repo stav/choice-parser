@@ -1,6 +1,6 @@
-data
-doc
-*.pyc
 *~
+*.pyc
+docs/_build
+data
 pyparsing
 pyPdf
