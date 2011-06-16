@@ -24,13 +24,19 @@ Right now the system only uses one converter, namely the command-line applicatio
 to the system gives the parsers a better chance of coming up with the correct
 format.
 
-PDF converter options:
+Python PDF converter options:
 
-* pdftotext - http://www.foolabs.com/xpdf/
-* pyPdf - http://pybrary.net/pyPdf/
-* PDFMiner - http://www.unixuser.org/~euske/python/pdfminer/
-* slate (PDFMiner) - http://pypi.python.org/pypi/slate
-* gfx - http://www.swftools.org/gfx_tutorial.html
+* pdftotext - [CLI] http://www.foolabs.com/xpdf/
+* PDFMiner - [CLI] http://www.unixuser.org/~euske/python/pdfminer/
+* slate - [module] (PDFMiner API) http://pypi.python.org/pypi/slate
+* pyPdf - [module] http://pybrary.net/pyPdf/
+* gfx - [module] http://www.swftools.org/gfx_tutorial.html
+
+*Why isn't just one converter, like pdftotext, good enough?*
+
+*Pdftotext* is a good fall back becuse we can usually get 90% accuracy from
+even the worst formatted files.  But pdftotext does not give us the data
+split up into nice pages. Instead it renders one long continuous string.
 
 Github
 ------
@@ -41,3 +47,6 @@ PDF converters to submit their renderings for a single file.  The branch
 is so-named because the :class:`~choice.router.Router` will maintain in-memory
 all the input data, including multiple rendered PDF conversions, instead of
 discarding them after parsing.
+
+This branch started before the June 14 restructuring so merging will have to
+be done manually file by file most likely.

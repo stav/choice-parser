@@ -16,7 +16,7 @@ Requirements
 ============
 
 * **Python**
-    - 2.5+
+    - 2.7
 
 Two External components are used to convert Portable Document Format (PDF)
 files to plain text for consumption buy the parsers.  Either component will
