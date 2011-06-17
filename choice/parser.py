@@ -320,13 +320,14 @@ class QuestParser (Parser):
     >>> len(q[0].options)
     4
     """
-    stem_index = r'[0-9.]+(?:\.|\))'
-    option_a   = r'A(?::|\))'
-    option_b   = r'B(?::|\))'
-    option_c   = r'C(?::|\))'
-    option_d   = r'D(?::|\))'
-    option_e   = r'E(?::|\))'
+    stem_index = r'[0-9][0-9.]*(?:\.|\))'
+    option_a   = r'A(?::|\)|\.)'
+    option_b   = r'B(?::|\)|\.)'
+    option_c   = r'C(?::|\)|\.)'
+    option_d   = r'D(?::|\)|\.)'
+    option_e   = r'E(?::|\)|\.)'
     body       = r'.+?'
+    empty_body = r'.*?'
     whitespace = r'\s+'
     double_line_break = r'(?:(\n\n)|(\s*$))'
 
@@ -343,6 +344,7 @@ class QuestParser (Parser):
             d    =self.option_d,
             e    =self.option_e,
             body =self.body,
+            ebody=self.empty_body,
             w    =self.whitespace,
             lb   =self.double_line_break,
             )
@@ -355,14 +357,14 @@ class QuestParser (Parser):
         @param  string  The input string
         @return  list  The tokenized input
         """
-        regex = self._format(r"({i}{w}{body}{a}{w}{body}{b}{w}{body}{c}{w}{body}(?:{d}{w}{body})?(?:{e}{w}{body})?(?={i}{w}))")
+        regex = self._format(r"((?<=\n){i}{w}{body}{a}{w}{body}{b}{w}{body}{c}{w}{body}(?:{d}{w}{body})?(?:{e}{w}{ebody})?(?={i}{w}))")
         p = re.compile(regex, re.DOTALL | re.IGNORECASE)
 
         self._tokens = p.split(string) # re.IGNORECASE doesn't really work unless you re.compile it
 
     def parse(self, string):
         super(QuestParser, self).parse(string)
-        regex = self._format(r"({i}{w}{body})({a}{w}{body})({b}{w}{body})({c}{w}{body})({d}{w}{body})?({e}{w}{body})?{lb}")
+        regex = self._format(r"({i}{w}{body})({a}{w}{body})({b}{w}{body})({c}{w}{body})({d}{w}{body})?({e}{w}{ebody})?{lb}")
 
         self._tokenize(string)
         for token in [t.strip() for t in self._tokens if t]:
