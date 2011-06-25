@@ -42,9 +42,9 @@ class TestChoiceData(unittest.TestCase):
         self.router.load(['-i', 'input/computer.pdf'])
         self.assertEqual(len(self.router.questions), 20)
 
-    def test_imhotep(self):
-        self.router.load('-i input/imhotep  -m SplitstemMogrifyer'.split())
-        self.assertEqual(len(self.router.questions), 11)
+    # def test_imhotep(self):
+    #     self.router.load('-i input/imhotep  -m SplitstemMogrifyer'.split())
+    #     self.assertEqual(len(self.router.questions), 11)
 
     def test_motorcycle(self):
         self.router.load(['-i', 'input/motorcycle'])
@@ -55,16 +55,25 @@ class TestChoiceData(unittest.TestCase):
         self.assertEqual(len(self.router.questions), 6)
 
     def test_pharmacology(self):
-        self.router.load('-i input/pharmacology.pdf -m SplitstemMogrifyer'.split())
+        self.router.load('-i input/pharmacology.pdf'.split())
         self.assertTrue(len(self.router.questions) > 250)
 
     def test_regulation(self):
         self.router.load(['-i', 'input/regulation.pdf'])
         self.assertEqual(len(self.router.questions), 20)
 
-    def test_accounting(self):
-        self.router.load(['-i', 'input/accounting.txt'])
-        #~ self.assertTrue(len(self.router.questions) > 300)
+    # def test_accounting(self):
+    #     self.router.load(['-i', 'input/accounting.txt'])
+    #     self.assertTrue(len(self.router.questions) > 300)
+        
+    def test_plants(self):
+        self.router.load(['-i', 'input/plants.pdf'])
+        # 56 questions minus 5 short answer
+        self.assertEqual(len(self.router.questions), 51)
+        
+    def test_money(self):
+        self.router.load(['-i', 'input/money.pdf'])
+        self.assertEqual(len(self.router.questions), 23)
 
 def suite():
     suite = unittest.TestSuite()

@@ -150,7 +150,7 @@ class IndexParser (Parser):
                 continue
 
             if question is not None:
-                o = re.match(r"^\s*[a-zA-Z][.):]\s", token)
+                o = re.match(r"^\s*[\[\(]?[a-zA-Z][.):\]]\s", token)
                 if o and o.group():
                     question.options.append(token)
 
